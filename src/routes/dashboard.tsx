@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, BookOpen, Coffee, CreditCard, ScanLine, Bus, Calendar, ChevronRight } from "lucide-react";
+import { Bell, BookOpen, CreditCard, ScanLine, Bus, Calendar, ChevronRight } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-store";
