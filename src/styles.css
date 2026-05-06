@@ -78,7 +78,10 @@
   --ring: oklch(0.5 0.14 265);
 
   --gradient-primary: linear-gradient(135deg, oklch(0.32 0.14 265), oklch(0.55 0.18 270));
-  --gradient-card: linear-gradient(135deg, oklch(0.32 0.14 265) 0%, oklch(0.45 0.16 268) 50%, oklch(0.6 0.18 275) 100%);
+  /* WSU brand: deep navy blue → royal blue, with gold accents applied in component */
+  --gradient-card: linear-gradient(135deg, oklch(0.22 0.10 255) 0%, oklch(0.30 0.14 258) 45%, oklch(0.42 0.17 262) 100%);
+  --wsu-gold: oklch(0.82 0.16 85);
+  --wsu-blue: oklch(0.28 0.12 258);
   --gradient-accent: linear-gradient(135deg, oklch(0.7 0.17 155), oklch(0.78 0.14 165));
   --gradient-mesh: radial-gradient(at 20% 10%, oklch(0.55 0.18 270 / 0.25) 0, transparent 50%),
                    radial-gradient(at 80% 90%, oklch(0.7 0.17 155 / 0.18) 0, transparent 50%);
