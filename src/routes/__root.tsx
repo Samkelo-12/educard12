@@ -81,6 +81,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Campus ID — Digital Student Card" },
+      { name: "twitter:description", content: "Modern digital student card for campus access, verification, and transport." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/53430e9e-466d-421a-be5f-c8f590df32cf/id-preview-1e2da379--233689cd-199f-4687-a636-9b05573db824.lovable.app-1778102065447.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/53430e9e-466d-421a-be5f-c8f590df32cf/id-preview-1e2da379--233689cd-199f-4687-a636-9b05573db824.lovable.app-1778102065447.png" },
     ],
     links: [
       {
