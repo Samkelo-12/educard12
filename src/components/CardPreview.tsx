@@ -89,6 +89,15 @@ export function CardPreview({ profile, compact }: { profile: StudentProfile; com
         </div>
       )}
 
+      {!compact && (
+        <div className="relative mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
+          <p className="text-[9px] uppercase tracking-[0.2em] font-semibold" style={{ color: "oklch(0.88 0.14 90)" }}>
+            WSU • In Pursuit of Excellence
+          </p>
+          <p className="text-[9px] text-primary-foreground/50 font-mono">wsu.ac.za</p>
+        </div>
+      )}
+
       {compact && (
         <p className="relative mt-5 text-[11px] text-primary-foreground/70">Tap to view full card →</p>
       )}
