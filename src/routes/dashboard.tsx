@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, BookOpen, Coffee, CreditCard, ScanLine, Bus, Calendar, ChevronRight } from "lucide-react";
+import { Bell, BookOpen, CreditCard, ScanLine, Bus, Calendar, ChevronRight } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-store";
@@ -51,7 +51,6 @@ function Dashboard() {
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Campus services</h2>
         <div className="space-y-3">
           <ServiceRow icon={BookOpen} title="Library" subtitle="3 books due in 5 days" tone="primary" />
-          <ServiceRow icon={Coffee} title="Cafeteria" subtitle="Balance: R 245.50" tone="accent" />
           <ServiceRow icon={Calendar} title="Event check-in" subtitle="Orientation Week — Tomorrow" tone="warning" />
         </div>
       </section>

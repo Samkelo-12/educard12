@@ -33,7 +33,7 @@ function CardPage() {
       </header>
 
       <div className="pt-2">
-        <CardPreview profile={profile} />
+        <CardPreview profile={profile} editablePhoto />
       </div>
 
       <div className="rounded-2xl bg-card p-4 shadow-soft space-y-3">
