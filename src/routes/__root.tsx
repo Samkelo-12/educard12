@@ -73,8 +73,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Campus ID — Digital Student Card" },
-      { name: "description", content: "Modern digital student card for campus access, verification, and transport." },
+      { title: "Educard — Digital Student Card" },
+      { name: "description", content: "Educard: modern digital student card for campus access, verification, and transport." },
       { name: "author", content: "Campus ID" },
       { property: "og:title", content: "Campus ID — Digital Student Card" },
       { property: "og:description", content: "Modern digital student card for campus access, verification, and transport." },
