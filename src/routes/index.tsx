@@ -28,7 +28,7 @@ function Splash() {
             <GraduationCap className="h-12 w-12" />
           </div>
           <div className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight">Campus ID</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Educard</h1>
             <p className="mt-2 text-sm text-primary-foreground/80">Your digital student card</p>
           </div>
           <div className="mt-10 flex gap-1.5">
