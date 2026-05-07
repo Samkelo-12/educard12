@@ -44,7 +44,7 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
     reader.readAsDataURL(file);
   };
 
-  const minH = compact ? "min-h-[210px]" : "min-h-[440px]";
+  const minH = compact ? "min-h-[210px]" : "min-h-[330px]";
 
   return (
     <div className={`perspective-1000 ${minH}`}>
@@ -54,73 +54,75 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
         className={`relative preserve-3d w-full h-full transition-transform duration-700 ease-out text-left ${minH} ${flipped ? "rotate-y-180" : ""}`}
         aria-label="Flip card"
       >
-        {/* FRONT — WSU template */}
-        <div className="absolute inset-0 backface-hidden overflow-hidden rounded-3xl bg-white text-black shadow-card flex">
-          {/* Left: vertical barcode strip */}
-          <div className="w-12 shrink-0 border-r border-black/10 flex items-center justify-center bg-white">
-            <div className="rotate-90 origin-center">
-              <Barcode value={profile.studentNumber} width={compact ? 140 : 200} height={26} />
+        {/* FRONT — WSU template (replica) */}
+        <div className={`absolute inset-0 backface-hidden overflow-hidden rounded-2xl bg-white text-black shadow-card ${compact ? "p-3" : "p-4"}`}>
+          {/* Top-right curved black WSU panel */}
+          <div className="absolute top-0 right-0 h-[58%] w-[62%] bg-black rounded-bl-[60%] rounded-tr-2xl flex flex-col items-center justify-center text-white pl-6 pr-3">
+            <div className="flex items-center gap-1 leading-none">
+              <span className="flex flex-col gap-[3px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                <span className="h-1.5 w-1.5 rounded-full bg-white" />
+              </span>
+              <span className={`${compact ? "text-4xl" : "text-6xl"} font-black tracking-tight`}>WSU</span>
+            </div>
+            <div className={`${compact ? "text-[8px]" : "text-[10px]"} mt-1 px-1 ring-1 ring-white/80 rounded-sm tracking-wide`}>
+              Walter Sisulu University
+            </div>
+            <div className={`${compact ? "text-[8px]" : "text-[10px]"} mt-1 italic opacity-90`}>
+              In pursuit of excellence
             </div>
           </div>
 
-          {/* Middle: details */}
-          <div className={`flex-1 min-w-0 ${compact ? "p-3" : "p-4"} flex flex-col`}>
-            <div className="flex items-start gap-3">
-              {editablePhoto ? (
-                <label
-                  onClick={(e) => e.stopPropagation()}
-                  className="relative cursor-pointer h-24 w-20 rounded-md bg-neutral-100 ring-1 ring-black/15 flex items-center justify-center text-xl font-bold overflow-hidden shrink-0"
-                >
-                  {profile.photo ? (
-                    <img src={profile.photo} alt="" className="h-full w-full object-cover" />
-                  ) : initials}
-                  <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-black text-white ring-2 ring-white">
-                    <Camera className="h-2.5 w-2.5" />
-                  </span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
-                </label>
-              ) : (
-                <div className="h-24 w-20 rounded-md bg-neutral-100 ring-1 ring-black/15 flex items-center justify-center text-xl font-bold overflow-hidden shrink-0">
-                  {profile.photo ? (
-                    <img src={profile.photo} alt="" className="h-full w-full object-cover" />
-                  ) : initials}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase tracking-widest text-black/50">Valid</p>
-                <p className="text-3xl font-black leading-none">{profile.year || "2026"}</p>
-                <p className="mt-2 text-[10px] font-mono tracking-[0.18em] text-black/70 break-all">
-                  {profile.studentNumber}
-                </p>
+          {/* Photo top-left */}
+          <div className="relative z-10 flex gap-3">
+            {editablePhoto ? (
+              <label
+                onClick={(e) => e.stopPropagation()}
+                className={`relative cursor-pointer ${compact ? "h-20 w-16" : "h-28 w-24"} bg-neutral-200 ring-1 ring-black/30 flex items-center justify-center text-lg font-bold overflow-hidden shrink-0`}
+              >
+                {profile.photo ? (
+                  <img src={profile.photo} alt="" className="h-full w-full object-cover" />
+                ) : initials}
+                <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-black text-white ring-2 ring-white">
+                  <Camera className="h-2.5 w-2.5" />
+                </span>
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+              </label>
+            ) : (
+              <div className={`${compact ? "h-20 w-16" : "h-28 w-24"} bg-neutral-200 ring-1 ring-black/30 flex items-center justify-center text-lg font-bold overflow-hidden shrink-0`}>
+                {profile.photo ? (
+                  <img src={profile.photo} alt="" className="h-full w-full object-cover" />
+                ) : initials}
               </div>
-            </div>
+            )}
 
-            <div className="mt-3 space-y-0.5">
-              <p className="text-sm font-extrabold uppercase tracking-wide truncate">
-                {profile.fullName}
-              </p>
-              <p className="text-[11px] text-black/70 truncate">{profile.course}</p>
-              <p className="text-[10px] text-black/50 truncate">{profile.campus}</p>
-            </div>
-
-            <p className="mt-auto pt-2 text-[9px] text-black/40">Tap to flip →</p>
-          </div>
-
-          {/* Right: WSU brand panel */}
-          <div className="w-16 shrink-0 bg-black text-white flex items-center justify-center relative">
-            <span className="inline-flex items-center gap-1 absolute top-2 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-1.5 py-0.5 text-[7px] font-semibold ring-1 ring-white/30">
-              <ShieldCheck className="h-2 w-2" /> Active
-            </span>
-            <div className="[writing-mode:vertical-rl] rotate-180 flex items-center gap-2">
-              <span className="text-[8px] uppercase tracking-[0.25em] font-medium opacity-70">
-                In pursuit of excellence
-              </span>
-              <span className="text-4xl font-black tracking-tight">WSU</span>
-              <span className="text-[8px] uppercase tracking-[0.25em] font-medium opacity-70">
-                Walter Sisulu University
-              </span>
+            {/* Vertical year next to photo */}
+            <div className="[writing-mode:vertical-rl] rotate-180 font-black text-black tracking-tight self-start mt-1 text-2xl">
+              {profile.year || "2026"}
             </div>
           </div>
+
+          {/* Student number under photo */}
+          <p className={`${compact ? "text-[10px]" : "text-xs"} font-mono mt-1 tracking-wider`}>
+            {profile.studentNumber}
+          </p>
+
+          {/* Name / course / campus */}
+          <div className={`relative z-10 mt-1 ${compact ? "ml-16" : "ml-24"} space-y-0.5`}>
+            <p className={`${compact ? "text-xs" : "text-sm"} font-bold uppercase truncate`}>
+              MR {profile.fullName}
+            </p>
+            <p className={`${compact ? "text-[11px]" : "text-sm"} truncate`}>{profile.course}</p>
+            <p className={`${compact ? "text-[10px]" : "text-xs"} font-semibold truncate`}>{profile.campus}</p>
+          </div>
+
+          {/* Bottom barcode */}
+          <div className="absolute bottom-2 left-2 right-2 bg-neutral-300/60 rounded-sm px-1 py-0.5">
+            <Barcode value={profile.studentNumber} width={compact ? 240 : 360} height={compact ? 32 : 44} />
+          </div>
+
+          <span className="sr-only">Tap to flip</span>
         </div>
 
         {/* BACK */}
