@@ -1,12 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, Fingerprint, GraduationCap, Mail, Lock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { signIn, notifyAuth } from "@/lib/auth-store";
 import { toast } from "sonner";
+
+const REMEMBER_KEY = "dsc.remember";
 
 export const Route = createFileRoute("/login")({
   component: Login,
@@ -17,11 +20,31 @@ function Login() {
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
+
+  // Prefill saved credentials on mount
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(REMEMBER_KEY) || "null");
+      if (saved?.email) {
+        setEmail(saved.email);
+        if (saved.password) setPassword(saved.password);
+        setRemember(true);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const handle = (e: React.FormEvent) => {
     e.preventDefault();
     try {
       signIn(email, password);
+      if (remember) {
+        localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email, password }));
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
       notifyAuth();
       toast.success("Welcome back!");
       navigate({ to: "/dashboard" });
@@ -47,6 +70,7 @@ function Login() {
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input id="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
                 placeholder="you@university.edu" className="pl-10 h-11" />
             </div>
           </div>
@@ -56,6 +80,7 @@ function Login() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input id="password" type={show ? "text" : "password"} required value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 placeholder="••••••••" className="pl-10 pr-10 h-11" />
               <button type="button" onClick={() => setShow(!show)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -63,6 +88,11 @@ function Login() {
               </button>
             </div>
           </div>
+
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+            <Checkbox checked={remember} onCheckedChange={(v) => setRemember(v === true)} />
+            Remember me on this device
+          </label>
 
           <Button type="submit" className="w-full h-11 bg-gradient-primary shadow-soft">
             Sign in
