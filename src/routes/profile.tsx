@@ -101,7 +101,7 @@ function ProfilePage() {
                 <Row label="Course" value={profile.course} />
                 <Row label="Faculty" value={profile.faculty} />
                 <Row label="Campus" value={profile.campus} />
-                <Row label="Year" value={profile.year} />
+                <Row label="Buffalo City Campus" value={profile.year} />
               </>
             )}
           </div>
