@@ -92,7 +92,7 @@ function ProfilePage() {
                 <EditField label="Course" value={draft.course} onChange={(v) => setDraft({ ...draft, course: v })} />
                 <EditField label="Faculty" value={draft.faculty} onChange={(v) => setDraft({ ...draft, faculty: v })} />
                 <EditField label="Campus" value={draft.campus} onChange={(v) => setDraft({ ...draft, campus: v })} />
-                <EditField label="Year" value={draft.year} onChange={(v) => setDraft({ ...draft, year: v })} />
+                <EditField label="Buffalo City Campus" value={draft.year} onChange={(v) => setDraft({ ...draft, year: v })} />
                 <EditField label="Email" value={draft.email} onChange={(v) => setDraft({ ...draft, email: v })} />
               </>
             ) : (
@@ -101,7 +101,7 @@ function ProfilePage() {
                 <Row label="Course" value={profile.course} />
                 <Row label="Faculty" value={profile.faculty} />
                 <Row label="Campus" value={profile.campus} />
-                <Row label="Year" value={profile.year} />
+                <Row label="Buffalo City Campus" value={profile.year} />
               </>
             )}
           </div>

@@ -23,7 +23,7 @@ function SignUp() {
     course: "",
     faculty: "",
     campus: "",
-    year: "1st Year",
+    year: "Buffalo City Campus",
   });
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -86,7 +86,7 @@ function SignUp() {
               <Field label="Course"><Input required value={form.course} onChange={update("course")} placeholder="BSc Computer Science" /></Field>
               <Field label="Faculty"><Input required value={form.faculty} onChange={update("faculty")} placeholder="Faculty of Science" /></Field>
               <Field label="Campus"><Input required value={form.campus} onChange={update("campus")} placeholder="Main Campus" /></Field>
-              <Field label="Year of study"><Input required value={form.year} onChange={update("year")} placeholder="1st Year" /></Field>
+              <Field label="Year of study"><Input required value={form.year} onChange={update("year")} placeholder="Buffalo City Campus" /></Field>
               <div className="flex gap-2 pt-1">
                 <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setStep(1)}>Back</Button>
                 <Button type="submit" className="flex-1 h-11 bg-gradient-primary">Create account</Button>

@@ -102,7 +102,7 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
           </div>
 
           <div className="mt-3 grid grid-cols-[auto,1fr] gap-x-3 gap-y-0.5 items-baseline">
-            <p className="font-mono text-[11px] tracking-wider text-black self-end">{profile.studentNumber}</p>
+            <p className="font-mono tracking-wider text-black self-end text-lg">{profile.studentNumber}</p>
             <div className="min-w-0">
               <p className="font-bold uppercase tracking-wide text-sm truncate">{profile.fullName}</p>
               <p className="text-xs truncate">{profile.course}</p>
