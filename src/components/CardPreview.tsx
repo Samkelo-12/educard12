@@ -121,10 +121,6 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
           <p className="mt-2 text-[10px] text-black/50 text-center">Tap card to flip →</p>
         </div>
 
-          <p className="relative mt-5 text-[11px] text-white/60">
-            {compact ? "Tap to flip →" : "Tap card to flip →"}
-          </p>
-        </div>
 
         {/* BACK */}
         <div className={`absolute inset-0 rotate-y-180 backface-hidden overflow-hidden rounded-3xl bg-gradient-card text-primary-foreground shadow-card ${compact ? "p-5" : "p-6"} flex flex-col`}>
