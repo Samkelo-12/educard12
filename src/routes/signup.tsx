@@ -23,7 +23,7 @@ function SignUp() {
     course: "",
     faculty: "",
     campus: "",
-    year: "1st Year",
+    year: "Buffalo City Campus",
   });
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
