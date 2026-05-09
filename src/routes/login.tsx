@@ -37,8 +37,9 @@ function Login() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
             <GraduationCap className="h-7 w-7" />
           </div>
-          <h1 className="mt-6 text-3xl font-bold">Welcome back</h1>
-          <p className="mt-1 text-primary-foreground/80 text-sm">Sign in to access your student card</p>
+          <p className="mt-6 text-xs uppercase tracking-[0.25em] text-primary-foreground/70 font-semibold">EduCard</p>
+          <h1 className="mt-1 text-3xl font-bold">Welcome back</h1>
+          <p className="mt-1 text-primary-foreground/80 text-sm">Sign in to access your WSU student card</p>
         </div>
 
         <form onSubmit={handle} className="-mt-8 mx-5 rounded-3xl bg-card shadow-card p-6 space-y-4">
