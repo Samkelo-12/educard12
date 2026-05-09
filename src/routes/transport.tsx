@@ -82,7 +82,7 @@ function TransportInner() {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-sm">Tap to ride</p>
-                  <p className="text-xs text-muted-foreground">Use your Campus ID at the bus reader</p>
+                  <p className="text-xs text-muted-foreground">Use your Student ID at the bus reader</p>
                 </div>
               </div>
             </div>

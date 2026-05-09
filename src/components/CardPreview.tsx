@@ -64,7 +64,7 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
                 <GraduationCap className="h-5 w-5" strokeWidth={2.5} />
               </div>
               <div className="leading-tight">
-                <p className="text-[9px] uppercase tracking-[0.18em] font-bold text-white">Educard</p>
+                <p className="text-[9px] uppercase tracking-[0.1em] font-bold text-white leading-tight">Walter Sisulu<br />University</p>
                 <p className="text-[10px] font-medium text-white/70">{profile.campus || "Student ID"}</p>
               </div>
             </div>
@@ -126,7 +126,7 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
           <div className="-mx-6 mt-2 h-8 bg-black/80" />
 
           <div className="mt-5 flex items-center justify-between">
-            <p className="text-[9px] uppercase tracking-[0.2em] font-semibold">Educard</p>
+            <p className="text-[9px] uppercase tracking-[0.1em] font-semibold leading-tight">Walter Sisulu<br />University</p>
             <span className="text-[9px] uppercase tracking-widest text-white/50">Back</span>
           </div>
 
@@ -144,7 +144,7 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
           {!compact && (
             <div className="mt-auto pt-4 border-t border-white/10">
               <p className="text-[9px] text-white/60 leading-relaxed">
-                This card remains the property of Educard. If found, please return to the nearest campus office. Tampering invalidates the transport sticker.
+                This card remains the property of Walter Sisulu University. If found, please return to the nearest campus office. Tampering invalidates the transport sticker.
               </p>
               <p className="mt-2 text-[9px] text-white/50 font-mono">SN {profile.studentNumber}</p>
             </div>
