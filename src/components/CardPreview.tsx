@@ -95,7 +95,7 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-lg font-bold truncate">{profile.fullName}</p>
+              <p className="font-bold truncate text-base">{profile.fullName}</p>
               <p className="text-xs text-white/70 truncate">{profile.course}</p>
               <p className="text-[11px] text-white/50 mt-0.5 font-mono tracking-wider">{profile.studentNumber}</p>
             </div>
