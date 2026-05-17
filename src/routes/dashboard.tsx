@@ -60,21 +60,3 @@ function Quick({ to, icon: Icon, label }: { to: string; icon: typeof Bell; label
   );
 }
 
-function ServiceRow({ icon: Icon, title, subtitle, tone }: { icon: typeof Bell; title: string; subtitle: string; tone: "primary" | "accent" | "warning" }) {
-  const toneClass =
-    tone === "primary" ? "bg-primary/10 text-primary" :
-    tone === "accent" ? "bg-accent/15 text-accent-foreground" :
-    "bg-warning/20 text-warning-foreground";
-  return (
-    <div className="flex items-center gap-3 rounded-2xl bg-card p-3.5 shadow-soft">
-      <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${toneClass}`}>
-        <Icon className="h-5 w-5" />
-      </div>
-      <div className="flex-1">
-        <p className="font-semibold text-sm">{title}</p>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
-      </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-    </div>
-  );
-}
