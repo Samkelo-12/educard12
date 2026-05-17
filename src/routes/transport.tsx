@@ -27,7 +27,7 @@ const ROUTES = [
 export default function Transport() { return <TransportInner />; }
 
 function TransportInner() {
-  const [tab, setTab] = useState<"access" | "apply">("access");
+  
   const [applied, setApplied] = useState(false);
   const [route, setRoute] = useState(ROUTES[0].id);
   const [pickup, setPickup] = useState("");
