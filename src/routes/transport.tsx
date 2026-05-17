@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Bus, MapPin, Clock, CreditCard, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Bus, MapPin, CheckCircle2 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
