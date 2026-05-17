@@ -56,56 +56,8 @@ function TransportInner() {
         </div>
       </header>
 
-      <div className="px-5 -mt-4">
-        <div className="rounded-2xl bg-card p-1 shadow-soft grid grid-cols-2 text-sm font-medium">
-          {(["access", "apply"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`py-2.5 rounded-xl transition-colors ${
-                tab === t ? "bg-gradient-primary text-primary-foreground shadow-soft" : "text-muted-foreground"
-              }`}
-            >
-              {t === "access" ? "Access" : "Apply"}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="px-5 mt-5 space-y-4">
-        {tab === "access" ? (
-          <>
-            <div className="rounded-2xl bg-card p-4 shadow-soft">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-accent text-accent-foreground">
-                  <CreditCard className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-sm">Tap to ride</p>
-                  <p className="text-xs text-muted-foreground">Use your Student ID at the bus reader</p>
-                </div>
-              </div>
-            </div>
-
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Live routes</h2>
-            <div className="space-y-3">
-              {ROUTES.map((r) => (
-                <div key={r.id} className="rounded-2xl bg-card p-4 shadow-soft flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold">
-                    {r.id}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{r.name}</p>
-                    <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{r.time}</span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold text-success">{r.next}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : applied ? (
+        {applied ? (
           <div className="rounded-3xl bg-card p-8 shadow-card text-center space-y-3">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-success">
               <CheckCircle2 className="h-8 w-8" />
@@ -114,7 +66,7 @@ function TransportInner() {
             <p className="text-sm text-muted-foreground">
               Your transport application is under review. You'll get a notification once it's approved.
             </p>
-            <Button variant="outline" className="mt-2" onClick={() => { setApplied(false); setTab("access"); }}>
+            <Button variant="outline" className="mt-2" onClick={() => { setApplied(false); }}>
               Done
             </Button>
           </div>
