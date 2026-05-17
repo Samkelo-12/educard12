@@ -39,32 +39,10 @@ function Dashboard() {
 
       <section>
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Quick actions</h2>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Quick to="/card" icon={CreditCard} label="ID Card" />
           <Quick to="/scan" icon={ScanLine} label="Scan" />
           <Quick to="/transport" icon={Bus} label="Transport" />
-          <Quick to="/profile" icon={Calendar} label="Schedule" />
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Campus services</h2>
-        <div className="space-y-3">
-          <ServiceRow icon={BookOpen} title="Library" subtitle="3 books due in 5 days" tone="primary" />
-          <ServiceRow icon={Calendar} title="Event check-in" subtitle="Orientation Week — Tomorrow" tone="warning" />
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Announcements</h2>
-        <div className="rounded-2xl bg-card p-4 shadow-soft">
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">!</div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">Library hours extended</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Open until midnight during exam week. Bring your ID.</p>
-            </div>
-          </div>
         </div>
       </section>
     </div>
