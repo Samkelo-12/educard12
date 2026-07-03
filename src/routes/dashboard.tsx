@@ -27,10 +27,10 @@ function Dashboard() {
           <p className="text-sm text-muted-foreground">Hello,</p>
           <h1 className="text-2xl font-bold">{firstName} 👋</h1>
         </div>
-        <button className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-soft">
+        <Link to="/notifications" className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-soft">
           <Bell className="h-5 w-5" />
           <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-destructive" />
-        </button>
+        </Link>
       </header>
 
       <Link to="/card" className="block">
