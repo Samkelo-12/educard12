@@ -108,8 +108,8 @@ function ProfilePage() {
         </div>
 
         <div className="mt-5 rounded-2xl bg-card shadow-soft divide-y divide-border">
-          <SettingsRow icon={Shield} label="Privacy & security" />
-          <SettingsRow icon={Settings} label="App settings" />
+          <SettingsRow icon={Shield} label="Privacy & security" to="/privacy" />
+          <SettingsRow icon={Settings} label="App settings" to="/settings" />
         </div>
 
         <Button
@@ -142,12 +142,12 @@ function EditField({ label, value, onChange }: { label: string; value: string; o
   );
 }
 
-function SettingsRow({ icon: Icon, label }: { icon: typeof Shield; label: string }) {
+function SettingsRow({ icon: Icon, label, to }: { icon: typeof Shield; label: string; to: string }) {
   return (
-    <button className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+    <Link to={to} className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
       <Icon className="h-5 w-5 text-primary" />
       <span className="flex-1 text-sm font-medium">{label}</span>
       <ChevronRight className="h-4 w-4 text-muted-foreground" />
-    </button>
+    </Link>
   );
 }
