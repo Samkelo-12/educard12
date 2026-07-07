@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">EduCard</string>
+    <string name="title_activity_main">EduCard</string>
+    <string name="package_name">com.wsu.educard</string>
+    <string name="custom_url_scheme">com.wsu.educard</string>
+</resources>
