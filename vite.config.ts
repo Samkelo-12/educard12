@@ -27,10 +27,12 @@ export default defineConfig({
           const dest = resolve(process.cwd(), "dist/server/server.js");
           if (!existsSync(src) || existsSync(dest)) return;
           const shim = `import handler from "./index.mjs";
+const noop = () => {};
 const fallbackEnv = { ASSETS: { fetch: async () => new Response("not found", { status: 404 }) } };
+const fallbackCtx = { context: { waitUntil: noop, passThroughOnException: noop }, waitUntil: noop, passThroughOnException: noop };
 export default {
   fetch(request, env, ctx) {
-    return handler.fetch(request, env ?? fallbackEnv, ctx ?? {});
+    return handler.fetch(request, env ?? fallbackEnv, ctx ?? fallbackCtx);
   },
 };
 `;
