@@ -66,20 +66,11 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   return brandedErrorResponse();
 }
 
-// During Vite's preview-server prerender step, env is undefined. The Cloudflare
-// adapter reads env.ASSETS, so provide a stub that always misses to force SSR.
-const previewEnvStub = {
-  ASSETS: {
-    fetch: async () =>
-      new Response("not found", { status: 404, headers: { "content-type": "text/plain" } }),
-  },
-} as unknown;
-
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
-      const response = await handler.fetch(request, env ?? previewEnvStub, ctx ?? {});
+      const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
