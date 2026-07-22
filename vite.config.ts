@@ -18,7 +18,8 @@ function serverEntryShimPlugin(): import("vite").Plugin {
     name: "server-entry-shim",
     writeBundle(options: import("rollup").OutputOptions) {
       console.log("[server-entry-shim] writeBundle dir:", options.dir);
-      if (options.dir?.endsWith("/server") || options.dir?.endsWith("\\server")) {
+      const dir = options.dir?.replace(/[/\\]+$/, "");
+      if (dir?.endsWith("/server") || dir?.endsWith("\\server")) {
         mkdirSync(options.dir, { recursive: true });
         writeFileSync(
           join(options.dir, "server.js"),
