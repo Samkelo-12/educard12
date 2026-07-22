@@ -17,13 +17,15 @@ function serverEntryShimPlugin(): import("vite").Plugin {
   return {
     name: "server-entry-shim",
     writeBundle(options: import("rollup").OutputOptions) {
-      if (options.dir?.endsWith("/server")) {
+      console.log("[server-entry-shim] writeBundle dir:", options.dir);
+      if (options.dir?.endsWith("/server") || options.dir?.endsWith("\\server")) {
         mkdirSync(options.dir, { recursive: true });
         writeFileSync(
           join(options.dir, "server.js"),
           'export { default } from "./index.mjs";\n',
           "utf8"
         );
+        console.log("[server-entry-shim] created", join(options.dir, "server.js"));
       }
     },
   };
