@@ -13,10 +13,10 @@ import { join } from "path";
  * but the Nitro + Cloudflare build emits dist/server/index.mjs. Create a
  * thin ESM shim so prerender can find the server entry.
  */
-function serverEntryShimPlugin() {
+function serverEntryShimPlugin(): import("vite").Plugin {
   return {
     name: "server-entry-shim",
-    writeBundle(options) {
+    writeBundle(options: import("rollup").OutputOptions) {
       if (options.dir?.endsWith("/server")) {
         mkdirSync(options.dir, { recursive: true });
         writeFileSync(
