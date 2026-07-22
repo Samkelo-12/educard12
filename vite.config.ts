@@ -19,14 +19,15 @@ function serverEntryShimPlugin(): import("vite").Plugin {
     writeBundle(options: import("rollup").OutputOptions) {
       console.log("[server-entry-shim] writeBundle dir:", options.dir);
       const dir = options.dir?.replace(/[/\\]+$/, "");
-      if (dir?.endsWith("/server") || dir?.endsWith("\\server")) {
-        mkdirSync(options.dir, { recursive: true });
+      if (dir && (dir.endsWith("/server") || dir.endsWith("\\server"))) {
+        mkdirSync(dir, { recursive: true });
+        const shimPath = join(dir, "server.js");
         writeFileSync(
-          join(options.dir, "server.js"),
+          shimPath,
           'export { default } from "./index.mjs";\n',
           "utf8"
         );
-        console.log("[server-entry-shim] created", join(options.dir, "server.js"));
+        console.log("[server-entry-shim] created", shimPath);
       }
     },
   };
