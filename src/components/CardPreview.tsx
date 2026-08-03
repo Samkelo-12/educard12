@@ -40,7 +40,7 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => updateProfile({ photo: reader.result as string });
+    reader.onload = () => { void updateProfile({ photo: reader.result as string }); };
     reader.readAsDataURL(file);
   };
 
