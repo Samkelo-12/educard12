@@ -120,7 +120,7 @@ function ProfilePage() {
         <Button
           variant="outline"
           className="mt-5 w-full h-12 gap-2 text-destructive border-destructive/30 hover:bg-destructive/5"
-          onClick={() => { signOut(); navigate({ to: "/login" }); }}
+          onClick={() => { void signOut().then(() => navigate({ to: "/login" })); }}
         >
           <LogOut className="h-4 w-4" /> Sign out
         </Button>
