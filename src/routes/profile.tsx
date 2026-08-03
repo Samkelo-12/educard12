@@ -34,17 +34,22 @@ function ProfilePage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      updateProfile({ photo: reader.result as string });
-      toast.success("Photo updated");
+      void updateProfile({ photo: reader.result as string })
+        .then(() => toast.success("Photo updated"))
+        .catch((err) => toast.error((err as Error).message));
     };
     reader.readAsDataURL(file);
   };
 
-  const save = () => {
+  const save = async () => {
     if (!draft) return;
-    updateProfile(draft);
-    setEditing(false);
-    toast.success("Profile updated");
+    try {
+      await updateProfile(draft);
+      setEditing(false);
+      toast.success("Profile updated");
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
   return (
@@ -57,7 +62,7 @@ function ProfilePage() {
           <h1 className="text-base font-semibold">Profile</h1>
           <button
             onClick={() => {
-              if (editing) save();
+              if (editing) void save();
               else { setDraft(profile); setEditing(true); }
             }}
             className="text-sm font-semibold"
@@ -115,7 +120,7 @@ function ProfilePage() {
         <Button
           variant="outline"
           className="mt-5 w-full h-12 gap-2 text-destructive border-destructive/30 hover:bg-destructive/5"
-          onClick={() => { signOut(); navigate({ to: "/login" }); }}
+          onClick={() => { void signOut().then(() => navigate({ to: "/login" })); }}
         >
           <LogOut className="h-4 w-4" /> Sign out
         </Button>

@@ -5,7 +5,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signUp, notifyAuth } from "@/lib/auth-store";
+import { signUp } from "@/lib/auth-store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/signup")({
@@ -29,11 +29,10 @@ function SignUp() {
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      signUp(form);
-      notifyAuth();
+      await signUp(form);
       toast.success("Account created — your card is ready!");
       navigate({ to: "/dashboard" });
     } catch (err) {
