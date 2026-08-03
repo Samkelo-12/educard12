@@ -12,8 +12,9 @@ function Splash() {
   const navigate = useNavigate();
   useEffect(() => {
     const t = setTimeout(() => {
-      const p = getCurrentProfile();
-      navigate({ to: p ? "/dashboard" : "/login" });
+      void getCurrentProfile().then((p) => {
+        navigate({ to: p ? "/dashboard" : "/login" });
+      });
     }, 1400);
     return () => clearTimeout(t);
   }, [navigate]);
