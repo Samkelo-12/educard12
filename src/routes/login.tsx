@@ -5,7 +5,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn } from "@/lib/auth-store";
+import { signIn, getCurrentRoles } from "@/lib/auth-store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
