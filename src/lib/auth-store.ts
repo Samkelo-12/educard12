@@ -43,8 +43,10 @@ function toProfile(row: ProfileRow): StudentProfile {
   };
 }
 
-function toRow(patch: Partial<StudentProfile>) {
-  const row: Record<string, unknown> = {};
+type ProfileUpdate = Partial<Omit<ProfileRow, "id">>;
+
+function toRow(patch: Partial<StudentProfile>): ProfileUpdate {
+  const row: ProfileUpdate = {};
   if (patch.fullName !== undefined) row.full_name = patch.fullName;
   if (patch.studentNumber !== undefined) row.student_number = patch.studentNumber;
   if (patch.email !== undefined) row.email = patch.email;
