@@ -21,6 +21,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CardRouteImport } from './routes/card'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminCardsRouteImport } from './routes/admin/cards'
 
 const TransportRoute = TransportRouteImport.update({
   id: '/transport',
@@ -82,6 +83,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCardsRoute = AdminCardsRouteImport.update({
+  id: '/admin/cards',
+  path: '/admin/cards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
+  '/admin/cards': typeof AdminCardsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
+  '/admin/cards': typeof AdminCardsRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
+  '/admin/cards': typeof AdminCardsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/transport'
+    | '/admin/cards'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/transport'
+    | '/admin/cards'
     | '/admin'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/transport'
+    | '/admin/cards'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   TransportRoute: typeof TransportRoute
+  AdminCardsRoute: typeof AdminCardsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/cards': {
+      id: '/admin/cards'
+      path: '/admin/cards'
+      fullPath: '/admin/cards'
+      preLoaderRoute: typeof AdminCardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -287,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   TransportRoute: TransportRoute,
+  AdminCardsRoute: AdminCardsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
