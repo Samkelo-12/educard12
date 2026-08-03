@@ -5,7 +5,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn, notifyAuth } from "@/lib/auth-store";
+import { signIn } from "@/lib/auth-store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -18,11 +18,10 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handle = (e: React.FormEvent) => {
+  const handle = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      signIn(email, password);
-      notifyAuth();
+      await signIn(email, password);
       toast.success("Welcome back!");
       navigate({ to: "/dashboard" });
     } catch (err) {
