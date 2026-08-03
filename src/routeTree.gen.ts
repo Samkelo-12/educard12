@@ -19,8 +19,10 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CardRouteImport } from './routes/card'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminTransportRouteImport } from './routes/admin/transport'
+import { Route as AdminCardsRouteImport } from './routes/admin/cards'
 
 const TransportRoute = TransportRouteImport.update({
   id: '/transport',
@@ -72,20 +74,29 @@ const CardRoute = CardRouteImport.update({
   path: '/card',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTransportRoute = AdminTransportRouteImport.update({
+  id: '/admin/transport',
+  path: '/admin/transport',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCardsRoute = AdminCardsRouteImport.update({
+  id: '/admin/cards',
+  path: '/admin/cards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/card': typeof CardRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
@@ -96,10 +107,12 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
+  '/admin/cards': typeof AdminCardsRoute
+  '/admin/transport': typeof AdminTransportRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/card': typeof CardRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
@@ -110,11 +123,13 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
+  '/admin/cards': typeof AdminCardsRoute
+  '/admin/transport': typeof AdminTransportRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/card': typeof CardRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
@@ -125,12 +140,14 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
+  '/admin/cards': typeof AdminCardsRoute
+  '/admin/transport': typeof AdminTransportRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
     | '/card'
     | '/dashboard'
     | '/login'
@@ -141,10 +158,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/transport'
+    | '/admin/cards'
+    | '/admin/transport'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/card'
     | '/dashboard'
     | '/login'
@@ -155,10 +174,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/transport'
+    | '/admin/cards'
+    | '/admin/transport'
+    | '/admin'
   id:
     | '__root__'
     | '/'
-    | '/admin'
     | '/card'
     | '/dashboard'
     | '/login'
@@ -169,11 +190,13 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/transport'
+    | '/admin/cards'
+    | '/admin/transport'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
   CardRoute: typeof CardRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
@@ -184,6 +207,9 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   TransportRoute: typeof TransportRoute
+  AdminCardsRoute: typeof AdminCardsRoute
+  AdminTransportRoute: typeof AdminTransportRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -258,13 +284,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -272,12 +291,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/transport': {
+      id: '/admin/transport'
+      path: '/admin/transport'
+      fullPath: '/admin/transport'
+      preLoaderRoute: typeof AdminTransportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/cards': {
+      id: '/admin/cards'
+      path: '/admin/cards'
+      fullPath: '/admin/cards'
+      preLoaderRoute: typeof AdminCardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
   CardRoute: CardRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
@@ -288,6 +327,9 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   TransportRoute: TransportRoute,
+  AdminCardsRoute: AdminCardsRoute,
+  AdminTransportRoute: AdminTransportRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
