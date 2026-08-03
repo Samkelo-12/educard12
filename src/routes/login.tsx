@@ -23,8 +23,23 @@ function Login() {
     e.preventDefault();
     try {
       await signIn(email, password);
+      if (role === "admin") {
+        // The toggle is only a hint — staff access is enforced by backend roles.
+        const roles = await getCurrentRoles();
+        const isStaff = roles.some(
+          (r) => r === "admin" || r === "card_staff" || r === "transport_staff",
+        );
+        if (!isStaff) {
+          toast.error("This account is not authorised for the admin console.");
+          navigate({ to: "/dashboard" });
+          return;
+        }
+        toast.success("Welcome back!");
+        navigate({ to: "/admin" });
+        return;
+      }
       toast.success("Welcome back!");
-      navigate({ to: role === "admin" ? "/admin" : "/dashboard" });
+      navigate({ to: "/dashboard" });
     } catch (err) {
       toast.error((err as Error).message);
     }
