@@ -100,14 +100,14 @@ function TransportInner() {
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input required value={pickup} onChange={(e) => setPickup(e.target.value)}
-                  placeholder="e.g. Block C Residence" className="pl-10 h-11" />
+                  className="pl-10 h-11" />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <Label className="text-xs">Reason (optional)</Label>
               <Input value={reason} onChange={(e) => setReason(e.target.value)}
-                placeholder="Daily commute" className="h-11" />
+                className="h-11" />
             </div>
 
             <Button type="submit" className="w-full h-11 bg-gradient-primary gap-2">
