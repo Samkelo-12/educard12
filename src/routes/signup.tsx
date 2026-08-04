@@ -211,7 +211,7 @@ function SignUp() {
 
               <div className="flex gap-2 pt-1">
                 <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setStep(1)}>Back</Button>
-                <Button type="submit" className="flex-1 h-11 bg-gradient-primary">Create account</Button>
+                <Button type="submit" disabled={!meetsMinimum} className="flex-1 h-11 bg-gradient-primary">Create account</Button>
               </div>
             </>
           )}
