@@ -151,21 +151,19 @@ function SignUp() {
                   inputMode="text"
                   autoComplete="name"
                   aria-invalid={!!errors.fullName}
-                  placeholder="Samkelo Dlamini"
                 />
               </Field>
-              <Field label="STUDENT/STAFF NUMBER" error={errors.studentNumber}>
+              <Field label="STUDENT/STAFF NUMBER" error={errors.studentNumber}>
                 <Input
                   required
                   value={form.studentNumber}
                   onChange={updateStudentNumber}
                   inputMode="numeric"
                   aria-invalid={!!errors.studentNumber}
-                  placeholder="2025001234"
                 />
               </Field>
               <Field label="Email">
-                <Input required type="email" value={form.email} onChange={update("email")} placeholder="you@university.edu" />
+                <Input required type="email" value={form.email} onChange={update("email")} />
               </Field>
               <Field label="Password" error={errors.password}>
                 <PasswordInput
@@ -174,8 +172,8 @@ function SignUp() {
                   show={showPassword}
                   onToggle={() => setShowPassword((s) => !s)}
                   invalid={!!errors.password}
-                  placeholder="At least 6 characters"
                 />
+                <PasswordStrength password={form.password} />
               </Field>
               <Field label="Confirm password" error={errors.confirmPassword}>
                 <PasswordInput
@@ -184,11 +182,11 @@ function SignUp() {
                   show={showConfirm}
                   onToggle={() => setShowConfirm((s) => !s)}
                   invalid={!!errors.confirmPassword}
-                  placeholder="Re-enter your password"
                 />
               </Field>
               <Button
                 type="button"
+                disabled={!meetsMinimum}
                 className="w-full h-11 bg-gradient-primary"
                 onClick={() => {
                   if (validateStep1()) setStep(2);
@@ -199,10 +197,11 @@ function SignUp() {
             </>
           ) : (
             <>
-              <Field label="Course"><Input required value={form.course} onChange={update("course")} placeholder="BSc Computer Science" /></Field>
-              <Field label="Faculty"><Input required value={form.faculty} onChange={update("faculty")} placeholder="Faculty of Science" /></Field>
-              <Field label="Campus"><Input required value={form.campus} onChange={update("campus")} placeholder="Main Campus" /></Field>
-              <Field label="Year of study"><Input required value={form.year} onChange={update("year")} placeholder="Buffalo City Campus" /></Field>
+              <Field label="Course"><Input required value={form.course} onChange={update("course")} /></Field>
+              <Field label="Faculty"><Input required value={form.faculty} onChange={update("faculty")} /></Field>
+              <Field label="Campus"><Input required value={form.campus} onChange={update("campus")} /></Field>
+              <Field label="Year of study"><Input required value={form.year} onChange={update("year")} /></Field>
+
               <div className="flex gap-2 pt-1">
                 <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setStep(1)}>Back</Button>
                 <Button type="submit" className="flex-1 h-11 bg-gradient-primary">Create account</Button>
