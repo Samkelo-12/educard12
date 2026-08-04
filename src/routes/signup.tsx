@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Eye, EyeOff, GraduationCap } from "lucide-react";
+import { ArrowLeft, Check, Eye, EyeOff, GraduationCap, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +69,7 @@ function SignUp() {
   const updatePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setForm({ ...form, password: value });
-    setError("password", value.length > 0 && value.length < 6 ? "Password must be at least 6 characters" : "");
+    setError("password", "");
     setError("confirmPassword", confirmPassword && value !== confirmPassword ? "Passwords do not match" : "");
   };
 
@@ -92,8 +92,8 @@ function SignUp() {
       setError("studentNumber", "Student number can only contain numbers");
       return false;
     }
-    if (form.password.length < 6) {
-      setError("password", "Password must be at least 6 characters");
+    if (!meetsMinimum) {
+      setError("password", "Password must be 6+ characters with an uppercase, lowercase and number");
       return false;
     }
     if (form.password !== confirmPassword) {
@@ -102,6 +102,13 @@ function SignUp() {
     }
     return true;
   };
+
+  const meetsMinimum =
+    form.password.length >= 6 &&
+    /[A-Z]/.test(form.password) &&
+    /[a-z]/.test(form.password) &&
+    /[0-9]/.test(form.password);
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,21 +158,19 @@ function SignUp() {
                   inputMode="text"
                   autoComplete="name"
                   aria-invalid={!!errors.fullName}
-                  placeholder="Samkelo Dlamini"
                 />
               </Field>
-              <Field label="STUDENT/STAFF NUMBER" error={errors.studentNumber}>
+              <Field label="STUDENT/STAFF NUMBER" error={errors.studentNumber}>
                 <Input
                   required
                   value={form.studentNumber}
                   onChange={updateStudentNumber}
                   inputMode="numeric"
                   aria-invalid={!!errors.studentNumber}
-                  placeholder="2025001234"
                 />
               </Field>
               <Field label="Email">
-                <Input required type="email" value={form.email} onChange={update("email")} placeholder="you@university.edu" />
+                <Input required type="email" value={form.email} onChange={update("email")} />
               </Field>
               <Field label="Password" error={errors.password}>
                 <PasswordInput
@@ -174,8 +179,8 @@ function SignUp() {
                   show={showPassword}
                   onToggle={() => setShowPassword((s) => !s)}
                   invalid={!!errors.password}
-                  placeholder="At least 6 characters"
                 />
+                <PasswordStrength password={form.password} />
               </Field>
               <Field label="Confirm password" error={errors.confirmPassword}>
                 <PasswordInput
@@ -184,11 +189,11 @@ function SignUp() {
                   show={showConfirm}
                   onToggle={() => setShowConfirm((s) => !s)}
                   invalid={!!errors.confirmPassword}
-                  placeholder="Re-enter your password"
                 />
               </Field>
               <Button
                 type="button"
+                disabled={!meetsMinimum}
                 className="w-full h-11 bg-gradient-primary"
                 onClick={() => {
                   if (validateStep1()) setStep(2);
@@ -199,13 +204,14 @@ function SignUp() {
             </>
           ) : (
             <>
-              <Field label="Course"><Input required value={form.course} onChange={update("course")} placeholder="BSc Computer Science" /></Field>
-              <Field label="Faculty"><Input required value={form.faculty} onChange={update("faculty")} placeholder="Faculty of Science" /></Field>
-              <Field label="Campus"><Input required value={form.campus} onChange={update("campus")} placeholder="Main Campus" /></Field>
-              <Field label="Year of study"><Input required value={form.year} onChange={update("year")} placeholder="Buffalo City Campus" /></Field>
+              <Field label="Course"><Input required value={form.course} onChange={update("course")} /></Field>
+              <Field label="Faculty"><Input required value={form.faculty} onChange={update("faculty")} /></Field>
+              <Field label="Campus"><Input required value={form.campus} onChange={update("campus")} /></Field>
+              <Field label="Year of study"><Input required value={form.year} onChange={update("year")} /></Field>
+
               <div className="flex gap-2 pt-1">
                 <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setStep(1)}>Back</Button>
-                <Button type="submit" className="flex-1 h-11 bg-gradient-primary">Create account</Button>
+                <Button type="submit" disabled={!meetsMinimum} className="flex-1 h-11 bg-gradient-primary">Create account</Button>
               </div>
             </>
           )}
@@ -220,20 +226,57 @@ function SignUp() {
   );
 }
 
+function passwordChecks(pw: string) {
+  return [
+    { label: "At least 6 characters", ok: pw.length >= 6, required: true },
+    { label: "One uppercase letter", ok: /[A-Z]/.test(pw), required: true },
+    { label: "One lowercase letter", ok: /[a-z]/.test(pw), required: true },
+    { label: "One number", ok: /[0-9]/.test(pw), required: true },
+    { label: "One special character", ok: /[^A-Za-z0-9]/.test(pw), required: false },
+  ];
+}
+
+function PasswordStrength({ password }: { password: string }) {
+  if (!password) return null;
+  const checks = passwordChecks(password);
+  const score = checks.filter((c) => c.ok).length;
+  const label = score <= 2 ? "Weak" : score <= 4 ? "Medium" : "Strong";
+  const barClass = score <= 2 ? "bg-destructive" : score <= 4 ? "bg-amber-500" : "bg-emerald-500";
+  const textClass = score <= 2 ? "text-destructive" : score <= 4 ? "text-amber-600" : "text-emerald-600";
+
+  return (
+    <div className="space-y-2 pt-1">
+      <div className="flex items-center gap-2">
+        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+          <div className={`h-full rounded-full transition-all ${barClass}`} style={{ width: `${(score / 5) * 100}%` }} />
+        </div>
+        <span className={`text-xs font-semibold ${textClass}`}>{label}</span>
+      </div>
+      <ul className="space-y-1">
+        {checks.map((c) => (
+          <li key={c.label} className={`flex items-center gap-1.5 text-xs ${c.ok ? "text-emerald-600" : "text-muted-foreground"}`}>
+            {c.ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+            {c.label}
+            {!c.required ? <span className="text-muted-foreground/70">(optional)</span> : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function PasswordInput({
   value,
   onChange,
   show,
   onToggle,
   invalid,
-  placeholder,
 }: {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   show: boolean;
   onToggle: () => void;
   invalid?: boolean;
-  placeholder?: string;
 }) {
   return (
     <div className="relative">
@@ -245,8 +288,8 @@ function PasswordInput({
         onChange={onChange}
         aria-invalid={invalid}
         className="pr-10"
-        placeholder={placeholder}
       />
+
       <button
         type="button"
         onClick={onToggle}

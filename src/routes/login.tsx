@@ -73,7 +73,7 @@ function Login() {
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input id="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@university.edu" className="pl-10 h-11" />
+                className="pl-10 h-11" />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -82,7 +82,7 @@ function Login() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input id="password" type={show ? "text" : "password"} required value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••" className="pl-10 pr-10 h-11" />
+                className="pl-10 pr-10 h-11" />
               <button type="button" onClick={() => setShow(!show)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
