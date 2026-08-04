@@ -92,8 +92,8 @@ function SignUp() {
       setError("studentNumber", "Student number can only contain numbers");
       return false;
     }
-    if (form.password.length < 6) {
-      setError("password", "Password must be at least 6 characters");
+    if (!meetsMinimum) {
+      setError("password", "Password must be 6+ characters with an uppercase, lowercase and number");
       return false;
     }
     if (form.password !== confirmPassword) {
@@ -102,6 +102,13 @@ function SignUp() {
     }
     return true;
   };
+
+  const meetsMinimum =
+    form.password.length >= 6 &&
+    /[A-Z]/.test(form.password) &&
+    /[a-z]/.test(form.password) &&
+    /[0-9]/.test(form.password);
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
