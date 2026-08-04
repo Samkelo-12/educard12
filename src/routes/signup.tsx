@@ -154,7 +154,7 @@ function SignUp() {
                   placeholder="Samkelo Dlamini"
                 />
               </Field>
-              <Field label="Student number" error={errors.studentNumber}>
+              <Field label="STUDENT/STAFF NUMBER" error={errors.studentNumber}>
                 <Input
                   required
                   value={form.studentNumber}
