@@ -69,7 +69,7 @@ function SignUp() {
   const updatePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setForm({ ...form, password: value });
-    setError("password", value.length > 0 && value.length < 6 ? "Password must be at least 6 characters" : "");
+    setError("password", "");
     setError("confirmPassword", confirmPassword && value !== confirmPassword ? "Passwords do not match" : "");
   };
 
