@@ -12,7 +12,7 @@ export const Route = createFileRoute("/signup")({
   component: SignUp,
 });
 
-const LETTERS_ONLY = /^[A-Za-z\s]*$/;
+const LETTERS_ONLY = /^[A-Za-z\s'-]*$/;
 const DIGITS_ONLY = /^[0-9]*$/;
 
 function SignUp() {
