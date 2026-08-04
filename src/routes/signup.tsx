@@ -219,20 +219,57 @@ function SignUp() {
   );
 }
 
+function passwordChecks(pw: string) {
+  return [
+    { label: "At least 6 characters", ok: pw.length >= 6, required: true },
+    { label: "One uppercase letter", ok: /[A-Z]/.test(pw), required: true },
+    { label: "One lowercase letter", ok: /[a-z]/.test(pw), required: true },
+    { label: "One number", ok: /[0-9]/.test(pw), required: true },
+    { label: "One special character", ok: /[^A-Za-z0-9]/.test(pw), required: false },
+  ];
+}
+
+function PasswordStrength({ password }: { password: string }) {
+  if (!password) return null;
+  const checks = passwordChecks(password);
+  const score = checks.filter((c) => c.ok).length;
+  const label = score <= 2 ? "Weak" : score <= 4 ? "Medium" : "Strong";
+  const barClass = score <= 2 ? "bg-destructive" : score <= 4 ? "bg-amber-500" : "bg-emerald-500";
+  const textClass = score <= 2 ? "text-destructive" : score <= 4 ? "text-amber-600" : "text-emerald-600";
+
+  return (
+    <div className="space-y-2 pt-1">
+      <div className="flex items-center gap-2">
+        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+          <div className={`h-full rounded-full transition-all ${barClass}`} style={{ width: `${(score / 5) * 100}%` }} />
+        </div>
+        <span className={`text-xs font-semibold ${textClass}`}>{label}</span>
+      </div>
+      <ul className="space-y-1">
+        {checks.map((c) => (
+          <li key={c.label} className={`flex items-center gap-1.5 text-xs ${c.ok ? "text-emerald-600" : "text-muted-foreground"}`}>
+            {c.ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+            {c.label}
+            {!c.required ? <span className="text-muted-foreground/70">(optional)</span> : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function PasswordInput({
   value,
   onChange,
   show,
   onToggle,
   invalid,
-  placeholder,
 }: {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   show: boolean;
   onToggle: () => void;
   invalid?: boolean;
-  placeholder?: string;
 }) {
   return (
     <div className="relative">
@@ -244,8 +281,8 @@ function PasswordInput({
         onChange={onChange}
         aria-invalid={invalid}
         className="pr-10"
-        placeholder={placeholder}
       />
+
       <button
         type="button"
         onClick={onToggle}
