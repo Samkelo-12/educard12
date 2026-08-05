@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Eye, EyeOff, Fingerprint, GraduationCap, Mail, Lock, ShieldCheck, User } from "lucide-react";
+import { Eye, EyeOff, Fingerprint, GraduationCap, Mail, Lock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn, getCurrentRoles } from "@/lib/auth-store";
+import { signIn } from "@/lib/auth-store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -17,27 +17,11 @@ function Login() {
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"student" | "admin">("student");
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await signIn(email, password);
-      if (role === "admin") {
-        // The toggle is only a hint — staff access is enforced by backend roles.
-        const roles = await getCurrentRoles();
-        const isStaff = roles.some(
-          (r) => r === "admin" || r === "card_staff" || r === "transport_staff",
-        );
-        if (!isStaff) {
-          toast.error("This account is not authorised for the admin console.");
-          navigate({ to: "/dashboard" });
-          return;
-        }
-        toast.success("Welcome back!");
-        navigate({ to: "/admin" });
-        return;
-      }
       toast.success("Welcome back!");
       navigate({ to: "/dashboard" });
     } catch (err) {
@@ -58,16 +42,6 @@ function Login() {
         </div>
 
         <form onSubmit={handle} className="-mt-8 mx-5 rounded-3xl bg-card shadow-card p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted p-1">
-            <button type="button" onClick={() => setRole("student")}
-              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition ${role === "student" ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"}`}>
-              <User className="h-4 w-4" /> Student
-            </button>
-            <button type="button" onClick={() => setRole("admin")}
-              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition ${role === "admin" ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"}`}>
-              <ShieldCheck className="h-4 w-4" /> Admin
-            </button>
-          </div>
           <div className="space-y-1.5">
             <Label htmlFor="email">Email or student number</Label>
             <div className="relative">
@@ -91,7 +65,7 @@ function Login() {
           </div>
 
           <Button type="submit" className="w-full h-11 bg-gradient-primary shadow-soft">
-            Sign in as {role === "admin" ? "admin" : "student"}
+            Sign in
           </Button>
 
           <div className="flex items-center gap-3 py-2">
