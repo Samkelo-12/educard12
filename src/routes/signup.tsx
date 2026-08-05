@@ -5,8 +5,11 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SearchableSelect } from "@/components/SearchableSelect";
+import { CAMPUSES, coursesFor, facultiesFor } from "@/data/wsu-programmes";
 import { signUp } from "@/lib/auth-store";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/signup")({
   component: SignUp,
