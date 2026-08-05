@@ -5,8 +5,11 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SearchableSelect } from "@/components/SearchableSelect";
+import { CAMPUSES, coursesFor, facultiesFor } from "@/data/wsu-programmes";
 import { signUp } from "@/lib/auth-store";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/signup")({
   component: SignUp,
@@ -114,7 +117,11 @@ function SignUp() {
     e.preventDefault();
     if (!validateStep1()) {
       setStep(1);
+    }
+    if (!form.campus || !form.faculty || !form.course) {
+      toast.error("Please select your campus, faculty and course");
       return;
+
     }
     try {
       await signUp(form);
@@ -204,9 +211,38 @@ function SignUp() {
             </>
           ) : (
             <>
-              <Field label="Course"><Input required value={form.course} onChange={update("course")} /></Field>
-              <Field label="Faculty"><Input required value={form.faculty} onChange={update("faculty")} /></Field>
-              <Field label="Campus"><Input required value={form.campus} onChange={update("campus")} /></Field>
+              <Field label="Campus">
+                <SearchableSelect
+                  value={form.campus}
+                  options={CAMPUSES}
+                  placeholder="Select campus"
+                  searchPlaceholder="Search campuses..."
+                  emptyText="No campus found"
+                  onChange={(campus) => setForm({ ...form, campus, faculty: "", course: "" })}
+                />
+              </Field>
+              <Field label="Faculty">
+                <SearchableSelect
+                  value={form.faculty}
+                  options={facultiesFor(form.campus)}
+                  disabled={!form.campus}
+                  placeholder={form.campus ? "Select faculty" : "Select a campus first"}
+                  searchPlaceholder="Search faculties..."
+                  emptyText="No faculty found"
+                  onChange={(faculty) => setForm({ ...form, faculty, course: "" })}
+                />
+              </Field>
+              <Field label="Course">
+                <SearchableSelect
+                  value={form.course}
+                  options={coursesFor(form.campus, form.faculty)}
+                  disabled={!form.faculty}
+                  placeholder={form.faculty ? "Select course" : "Select a faculty first"}
+                  searchPlaceholder="Search courses..."
+                  emptyText="No course found"
+                  onChange={(course) => setForm({ ...form, course })}
+                />
+              </Field>
               <Field label="Year of study"><Input required value={form.year} onChange={update("year")} /></Field>
 
               <div className="flex gap-2 pt-1">
@@ -214,6 +250,7 @@ function SignUp() {
                 <Button type="submit" disabled={!meetsMinimum} className="flex-1 h-11 bg-gradient-primary">Create account</Button>
               </div>
             </>
+
           )}
         </form>
 
