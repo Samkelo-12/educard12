@@ -33,7 +33,7 @@ function SignUp() {
     course: "",
     faculty: "",
     campus: "",
-    year: "Buffalo City Campus",
+    year: " ",
   });
 
   const setError = (k: string, msg: string) =>
