@@ -117,7 +117,11 @@ function SignUp() {
     e.preventDefault();
     if (!validateStep1()) {
       setStep(1);
+    }
+    if (!form.campus || !form.faculty || !form.course) {
+      toast.error("Please select your campus, faculty and course");
       return;
+
     }
     try {
       await signUp(form);
