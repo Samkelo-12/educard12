@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Eye, EyeOff, Fingerprint, GraduationCap, Mail, Lock, ShieldCheck, User } from "lucide-react";
+import { Eye, EyeOff, Fingerprint, GraduationCap, Mail, Lock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn, getCurrentRoles } from "@/lib/auth-store";
+import { signIn } from "@/lib/auth-store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -17,27 +17,11 @@ function Login() {
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"student" | "admin">("student");
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await signIn(email, password);
-      if (role === "admin") {
-        // The toggle is only a hint — staff access is enforced by backend roles.
-        const roles = await getCurrentRoles();
-        const isStaff = roles.some(
-          (r) => r === "admin" || r === "card_staff" || r === "transport_staff",
-        );
-        if (!isStaff) {
-          toast.error("This account is not authorised for the admin console.");
-          navigate({ to: "/dashboard" });
-          return;
-        }
-        toast.success("Welcome back!");
-        navigate({ to: "/admin" });
-        return;
-      }
       toast.success("Welcome back!");
       navigate({ to: "/dashboard" });
     } catch (err) {
