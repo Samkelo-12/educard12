@@ -42,16 +42,8 @@ function Login() {
         </div>
 
         <form onSubmit={handle} className="-mt-8 mx-5 rounded-3xl bg-card shadow-card p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted p-1">
-            <button type="button" onClick={() => setRole("student")}
-              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition ${role === "student" ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"}`}>
-              <User className="h-4 w-4" /> Student
-            </button>
-            <button type="button" onClick={() => setRole("admin")}
-              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition ${role === "admin" ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"}`}>
-              <ShieldCheck className="h-4 w-4" /> Admin
-            </button>
-          </div>
+          <div className="space-y-1.5">
+
           <div className="space-y-1.5">
             <Label htmlFor="email">Email or student number</Label>
             <div className="relative">
