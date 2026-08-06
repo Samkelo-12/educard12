@@ -29,7 +29,20 @@ type Application = {
   status: string;
   created_at: string;
   reviewed_at: string | null;
+  valid_until: string | null;
 };
+
+function isExpired(validUntil: string | null) {
+  if (!validUntil) return false;
+  return new Date(validUntil) < new Date(new Date().toDateString());
+}
+
+function canReapply(app: Application | null) {
+  if (!app) return true;
+  if (app.status === "rejected") return true;
+  if (app.status === "approved" && isExpired(app.valid_until)) return true;
+  return false;
+}
 
 export default function Transport() { return <TransportInner />; }
 
@@ -89,7 +102,8 @@ function TransportInner() {
       .single();
     setSubmitting(false);
     if (error) {
-      toast.error("Could not submit your application. Please try again.");
+      toast.error(error.message || "Could not submit your application. Please try again.");
+      void load();
       return;
     }
     setApplication(data as Application);
@@ -99,6 +113,8 @@ function TransportInner() {
   };
 
   const status = application ? statusStyle(application.status) : null;
+  const eligible = canReapply(application);
+
 
   return (
     <div className="pb-6">
@@ -122,7 +138,7 @@ function TransportInner() {
           <div className="rounded-2xl bg-card p-8 shadow-soft flex justify-center">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-        ) : application && !showForm ? (
+        ) : application && (!showForm || !eligible) ? (
           <div className="rounded-2xl bg-card p-5 shadow-card space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -165,11 +181,43 @@ function TransportInner() {
                   </dd>
                 </div>
               )}
+              {application.status === "approved" && application.valid_until && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Valid until</dt>
+                  <dd className="text-right font-medium">
+                    {new Date(application.valid_until).toLocaleDateString()}
+                  </dd>
+                </div>
+              )}
             </dl>
 
-            <Button variant="outline" className="w-full h-11" onClick={() => setShowForm(true)}>
-              New application
-            </Button>
+            {application.status === "approved" && application.valid_until && !isExpired(application.valid_until) && (
+              <p className="rounded-xl bg-success/10 px-3 py-2 text-xs text-success">
+                Your transport application is valid until{" "}
+                {new Date(application.valid_until).toLocaleDateString()}.
+              </p>
+            )}
+            {application.status === "approved" && isExpired(application.valid_until) && (
+              <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Your transport pass has expired. You may apply again.
+              </p>
+            )}
+            {application.status === "rejected" && (
+              <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Your previous application was not approved. You may apply again.
+              </p>
+            )}
+            {application.status !== "approved" && application.status !== "rejected" && (
+              <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Your application is awaiting review. You can apply again once it has been decided.
+              </p>
+            )}
+
+            {eligible && (
+              <Button variant="outline" className="w-full h-11" onClick={() => setShowForm(true)}>
+                New application
+              </Button>
+            )}
           </div>
         ) : (
           <form onSubmit={submit} className="rounded-2xl bg-card p-5 shadow-soft space-y-4">
