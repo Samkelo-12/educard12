@@ -18,19 +18,14 @@ export const Route = createFileRoute("/transport")({
   ),
 });
 
-const ROUTES = [
-  { id: "A", name: "Main Campus → Residence", time: "Every 15 min", next: "in 4 min" },
-  { id: "B", name: "Residence → Library", time: "Every 20 min", next: "in 11 min" },
-  { id: "C", name: "Campus Loop", time: "Every 10 min", next: "in 2 min" },
-];
-
 export default function Transport() { return <TransportInner />; }
 
 function TransportInner() {
   
   const [applied, setApplied] = useState(false);
-  const [route, setRoute] = useState(ROUTES[0].id);
   const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
+  const [period, setPeriod] = useState("1st Semester");
   const [reason, setReason] = useState("");
 
   const submit = (e: React.FormEvent) => {
