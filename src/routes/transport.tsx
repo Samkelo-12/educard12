@@ -181,11 +181,43 @@ function TransportInner() {
                   </dd>
                 </div>
               )}
+              {application.status === "approved" && application.valid_until && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Valid until</dt>
+                  <dd className="text-right font-medium">
+                    {new Date(application.valid_until).toLocaleDateString()}
+                  </dd>
+                </div>
+              )}
             </dl>
 
-            <Button variant="outline" className="w-full h-11" onClick={() => setShowForm(true)}>
-              New application
-            </Button>
+            {application.status === "approved" && application.valid_until && !isExpired(application.valid_until) && (
+              <p className="rounded-xl bg-success/10 px-3 py-2 text-xs text-success">
+                Your transport application is valid until{" "}
+                {new Date(application.valid_until).toLocaleDateString()}.
+              </p>
+            )}
+            {application.status === "approved" && isExpired(application.valid_until) && (
+              <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Your transport pass has expired. You may apply again.
+              </p>
+            )}
+            {application.status === "rejected" && (
+              <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Your previous application was not approved. You may apply again.
+              </p>
+            )}
+            {application.status !== "approved" && application.status !== "rejected" && (
+              <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Your application is awaiting review. You can apply again once it has been decided.
+              </p>
+            )}
+
+            {eligible && (
+              <Button variant="outline" className="w-full h-11" onClick={() => setShowForm(true)}>
+                New application
+              </Button>
+            )}
           </div>
         ) : (
           <form onSubmit={submit} className="rounded-2xl bg-card p-5 shadow-soft space-y-4">
