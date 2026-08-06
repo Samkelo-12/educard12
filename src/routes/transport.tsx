@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/transport")({
@@ -18,19 +19,14 @@ export const Route = createFileRoute("/transport")({
   ),
 });
 
-const ROUTES = [
-  { id: "A", name: "Main Campus → Residence", time: "Every 15 min", next: "in 4 min" },
-  { id: "B", name: "Residence → Library", time: "Every 20 min", next: "in 11 min" },
-  { id: "C", name: "Campus Loop", time: "Every 10 min", next: "in 2 min" },
-];
-
 export default function Transport() { return <TransportInner />; }
 
 function TransportInner() {
   
   const [applied, setApplied] = useState(false);
-  const [route, setRoute] = useState(ROUTES[0].id);
   const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
+  const [period, setPeriod] = useState("1st Semester");
   const [reason, setReason] = useState("");
 
   const submit = (e: React.FormEvent) => {
@@ -78,25 +74,7 @@ function TransportInner() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Preferred route</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {ROUTES.map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setRoute(r.id)}
-                    className={`rounded-xl border-2 p-2.5 text-xs font-semibold transition-colors ${
-                      route === r.id ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"
-                    }`}
-                  >
-                    Route {r.id}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Pickup location</Label>
+              <Label className="text-xs">Pickup point (Residence)</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input required value={pickup} onChange={(e) => setPickup(e.target.value)}
@@ -105,10 +83,34 @@ function TransportInner() {
             </div>
 
             <div className="space-y-1.5">
+              <Label className="text-xs">Drop-off point (Campus)</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input required value={dropoff} onChange={(e) => setDropoff(e.target.value)}
+                  className="pl-10 h-11" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Applying for</Label>
+              <Select value={period} onValueChange={setPeriod}>
+                <SelectTrigger className="h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1st Semester">1st Semester</SelectItem>
+                  <SelectItem value="2nd Semester">2nd Semester</SelectItem>
+                  <SelectItem value="Full Year">Full Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
               <Label className="text-xs">Reason (optional)</Label>
               <Input value={reason} onChange={(e) => setReason(e.target.value)}
                 className="h-11" />
             </div>
+
 
             <Button type="submit" className="w-full h-11 bg-gradient-primary gap-2">
               <Bus className="h-4 w-4" /> Submit application
