@@ -67,6 +67,7 @@ export type Database = {
           reviewed_at: string | null
           status: string
           user_id: string
+          valid_until: string | null
         }
         Insert: {
           created_at?: string
@@ -78,6 +79,7 @@ export type Database = {
           reviewed_at?: string | null
           status?: string
           user_id: string
+          valid_until?: string | null
         }
         Update: {
           created_at?: string
@@ -89,6 +91,7 @@ export type Database = {
           reviewed_at?: string | null
           status?: string
           user_id?: string
+          valid_until?: string | null
         }
         Relationships: []
       }
