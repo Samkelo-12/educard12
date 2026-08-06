@@ -29,7 +29,20 @@ type Application = {
   status: string;
   created_at: string;
   reviewed_at: string | null;
+  valid_until: string | null;
 };
+
+function isExpired(validUntil: string | null) {
+  if (!validUntil) return false;
+  return new Date(validUntil) < new Date(new Date().toDateString());
+}
+
+function canReapply(app: Application | null) {
+  if (!app) return true;
+  if (app.status === "rejected") return true;
+  if (app.status === "approved" && isExpired(app.valid_until)) return true;
+  return false;
+}
 
 export default function Transport() { return <TransportInner />; }
 
