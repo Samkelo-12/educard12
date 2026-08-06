@@ -102,7 +102,8 @@ function TransportInner() {
       .single();
     setSubmitting(false);
     if (error) {
-      toast.error("Could not submit your application. Please try again.");
+      toast.error(error.message || "Could not submit your application. Please try again.");
+      void load();
       return;
     }
     setApplication(data as Application);
