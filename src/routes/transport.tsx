@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, Bus, MapPin, CheckCircle2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { ArrowLeft, Bus, MapPin, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/transport")({
   component: () => (
@@ -19,21 +20,85 @@ export const Route = createFileRoute("/transport")({
   ),
 });
 
+type Application = {
+  id: string;
+  pickup_point: string;
+  dropoff_point: string;
+  period: string;
+  reason: string | null;
+  status: string;
+  created_at: string;
+  reviewed_at: string | null;
+};
+
 export default function Transport() { return <TransportInner />; }
 
+function statusStyle(status: string) {
+  switch (status) {
+    case "approved":
+      return { icon: CheckCircle2, tone: "bg-success/15 text-success", label: "Approved" };
+    case "rejected":
+      return { icon: XCircle, tone: "bg-destructive/15 text-destructive", label: "Rejected" };
+    default:
+      return { icon: Clock, tone: "bg-muted text-muted-foreground", label: "Pending review" };
+  }
+}
+
 function TransportInner() {
-  
-  const [applied, setApplied] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [application, setApplication] = useState<Application | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [period, setPeriod] = useState("1st Semester");
   const [reason, setReason] = useState("");
 
-  const submit = (e: React.FormEvent) => {
+  const load = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("transport_applications")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (!error) setApplication((data?.[0] as Application) ?? null);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setApplied(true);
+    setSubmitting(true);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
+    if (!userId) {
+      setSubmitting(false);
+      toast.error("Please sign in to apply.");
+      return;
+    }
+    const { data, error } = await supabase
+      .from("transport_applications")
+      .insert({
+        user_id: userId,
+        pickup_point: pickup,
+        dropoff_point: dropoff,
+        period,
+        reason: reason.trim() ? reason.trim() : null,
+      })
+      .select()
+      .single();
+    setSubmitting(false);
+    if (error) {
+      toast.error("Could not submit your application. Please try again.");
+      return;
+    }
+    setApplication(data as Application);
+    setShowForm(false);
+    setPickup(""); setDropoff(""); setReason(""); setPeriod("1st Semester");
     toast.success("Application submitted");
   };
+
+  const status = application ? statusStyle(application.status) : null;
 
   return (
     <div className="pb-6">
@@ -53,17 +118,57 @@ function TransportInner() {
       </header>
 
       <div className="px-5 mt-5 space-y-4">
-        {applied ? (
-          <div className="rounded-3xl bg-card p-8 shadow-card text-center space-y-3">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-success">
-              <CheckCircle2 className="h-8 w-8" />
+        {loading ? (
+          <div className="rounded-2xl bg-card p-8 shadow-soft flex justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : application && !showForm ? (
+          <div className="rounded-2xl bg-card p-5 shadow-card space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-semibold">Your application</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Submitted {new Date(application.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              {status && (
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${status.tone}`}>
+                  <status.icon className="h-3.5 w-3.5" /> {status.label}
+                </span>
+              )}
             </div>
-            <h2 className="text-lg font-bold">Application submitted</h2>
-            <p className="text-sm text-muted-foreground">
-              Your transport application is under review. You'll get a notification once it's approved.
-            </p>
-            <Button variant="outline" className="mt-2" onClick={() => { setApplied(false); }}>
-              Done
+
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Pickup</dt>
+                <dd className="text-right font-medium">{application.pickup_point}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Drop-off</dt>
+                <dd className="text-right font-medium">{application.dropoff_point}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Applying for</dt>
+                <dd className="text-right font-medium">{application.period}</dd>
+              </div>
+              {application.reason && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Reason</dt>
+                  <dd className="text-right font-medium">{application.reason}</dd>
+                </div>
+              )}
+              {application.reviewed_at && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Reviewed</dt>
+                  <dd className="text-right font-medium">
+                    {new Date(application.reviewed_at).toLocaleDateString()}
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            <Button variant="outline" className="w-full h-11" onClick={() => setShowForm(true)}>
+              New application
             </Button>
           </div>
         ) : (
@@ -111,10 +216,15 @@ function TransportInner() {
                 className="h-11" />
             </div>
 
-
-            <Button type="submit" className="w-full h-11 bg-gradient-primary gap-2">
-              <Bus className="h-4 w-4" /> Submit application
+            <Button type="submit" disabled={submitting} className="w-full h-11 bg-gradient-primary gap-2">
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bus className="h-4 w-4" />}
+              Submit application
             </Button>
+            {application && (
+              <Button type="button" variant="ghost" className="w-full h-10" onClick={() => setShowForm(false)}>
+                Cancel
+              </Button>
+            )}
           </form>
         )}
       </div>
