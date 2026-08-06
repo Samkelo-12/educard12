@@ -138,7 +138,7 @@ function TransportInner() {
           <div className="rounded-2xl bg-card p-8 shadow-soft flex justify-center">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-        ) : application && !showForm ? (
+        ) : application && (!showForm || !eligible) ? (
           <div className="rounded-2xl bg-card p-5 shadow-card space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
