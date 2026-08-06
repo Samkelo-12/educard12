@@ -113,6 +113,8 @@ function TransportInner() {
   };
 
   const status = application ? statusStyle(application.status) : null;
+  const eligible = canReapply(application);
+
 
   return (
     <div className="pb-6">
