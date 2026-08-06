@@ -56,6 +56,42 @@ export type Database = {
         }
         Relationships: []
       }
+      transport_applications: {
+        Row: {
+          created_at: string
+          dropoff_point: string
+          id: string
+          period: string
+          pickup_point: string
+          reason: string | null
+          reviewed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dropoff_point: string
+          id?: string
+          period: string
+          pickup_point: string
+          reason?: string | null
+          reviewed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dropoff_point?: string
+          id?: string
+          period?: string
+          pickup_point?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
