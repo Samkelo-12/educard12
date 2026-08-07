@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GraduationCap, ShieldCheck, Camera, Bus } from "lucide-react";
 import type { StudentProfile } from "@/lib/auth-store";
 import { updateProfile } from "@/lib/auth-store";
+import { supabase } from "@/integrations/supabase/client";
 
 // Deterministic barcode (Code128-style stripes) — decorative
 function Barcode({ value, width = 220, height = 60 }: { value: string; width?: number; height?: number }) {
