@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { Bell, CreditCard, ScanLine, Bus } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-store";
 import { CardPreview } from "@/components/CardPreview";
+import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/dashboard")({
   component: () => (
