@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GraduationCap, ShieldCheck, Camera, Bus } from "lucide-react";
 import type { StudentProfile } from "@/lib/auth-store";
 import { updateProfile } from "@/lib/auth-store";
+import { supabase } from "@/integrations/supabase/client";
 
 // Deterministic barcode (Code128-style stripes) — decorative
 function Barcode({ value, width = 220, height = 60 }: { value: string; width?: number; height?: number }) {
@@ -33,7 +34,30 @@ function Barcode({ value, width = 220, height = 60 }: { value: string; width?: n
 
 export function CardPreview({ profile, compact, editablePhoto }: { profile: StudentProfile; compact?: boolean; editablePhoto?: boolean }) {
   const [flipped, setFlipped] = useState(false);
+  const [showSticker, setShowSticker] = useState(false);
   const initials = profile.fullName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+  useEffect(() => {
+    const checkTransport = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
+      if (!userId) return;
+      const { data } = await supabase
+        .from("transport_applications")
+        .select("status, valid_until")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      if (!data || data.status !== "approved" || !data.valid_until) return;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const valid = new Date(data.valid_until);
+      valid.setHours(0, 0, 0, 0);
+      setShowSticker(valid >= today);
+    };
+    void checkTransport();
+  }, []);
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -135,15 +159,17 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
           </div>
 
           {/* Transport sticker */}
-          <div className="mt-5 flex justify-center">
-            <div className="relative w-44 h-44 rounded-full bg-white text-black flex flex-col items-center justify-center shadow-glow ring-4 ring-white/30">
-              <div className="absolute inset-2 rounded-full border-2 border-dashed border-black/40" />
-              <Bus className="h-10 w-10" strokeWidth={2.2} />
-              <p className="mt-1 text-[10px] uppercase tracking-[0.18em] font-bold">Transport</p>
-              <p className="text-[9px] font-mono tracking-wider">VALID 2026</p>
-              <p className="mt-0.5 text-[8px] uppercase tracking-widest text-black/60">Zone A · B · C</p>
+          {showSticker && (
+            <div className="mt-5 flex justify-center">
+              <div className="relative w-44 h-44 rounded-full bg-white text-black flex flex-col items-center justify-center shadow-glow ring-4 ring-white/30">
+                <div className="absolute inset-2 rounded-full border-2 border-dashed border-black/40" />
+                <Bus className="h-10 w-10" strokeWidth={2.2} />
+                <p className="mt-1 text-[10px] uppercase tracking-[0.18em] font-bold">Transport</p>
+                <p className="text-[9px] font-mono tracking-wider">VALID 2026</p>
+                <p className="mt-0.5 text-[8px] uppercase tracking-widest text-black/60">Zone A · B · C</p>
+              </div>
             </div>
-          </div>
+          )}
 
           {!compact && (
             <div className="mt-auto pt-4 border-t border-white/10">
