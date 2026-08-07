@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { Bell, CreditCard, ScanLine, Bus } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-store";
 import { CardPreview } from "@/components/CardPreview";
+import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/dashboard")({
   component: () => (
@@ -17,6 +20,33 @@ export const Route = createFileRoute("/dashboard")({
 
 function Dashboard() {
   const { profile } = useAuth();
+  const [unread, setUnread] = useState(0);
+
+  const loadUnread = useCallback(async () => {
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("read", false);
+    setUnread(count ?? 0);
+  }, []);
+
+  useEffect(() => {
+    void loadUnread();
+    const channel = supabase
+      .channel("dashboard-notifications")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications" },
+        () => {
+          void loadUnread();
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [loadUnread]);
+
   if (!profile) return null;
   const firstName = profile.fullName.split(" ")[0];
 
@@ -29,8 +59,11 @@ function Dashboard() {
         </div>
         <Link to="/notifications" className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-soft">
           <Bell className="h-5 w-5" />
-          <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-destructive" />
+          {unread > 0 && (
+            <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-destructive" />
+          )}
         </Link>
+
       </header>
 
       <Link to="/card" className="block">

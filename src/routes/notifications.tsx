@@ -60,6 +60,7 @@ function relativeTime(iso: string) {
 function NotificationsPage() {
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -87,13 +88,15 @@ function NotificationsPage() {
     };
   }, [load]);
 
-  const markRead = async (n: NotificationRow) => {
+  const openNotification = async (n: NotificationRow) => {
+    setOpenId((prev) => (prev === n.id ? null : n.id));
     if (n.read) return;
     setItems((prev) =>
       prev.map((i) => (i.id === n.id ? { ...i, read: true } : i)),
     );
     await supabase.from("notifications").update({ read: true }).eq("id", n.id);
   };
+
 
   return (
     <div className="pb-6">
@@ -126,11 +129,12 @@ function NotificationsPage() {
         ) : (
           items.map((n) => {
             const Icon = iconFor(n.type);
+            const open = openId === n.id;
             return (
               <button
                 key={n.id}
                 type="button"
-                onClick={() => void markRead(n)}
+                onClick={() => void openNotification(n)}
                 className="flex w-full gap-3 rounded-2xl bg-card p-4 text-left shadow-soft"
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -143,16 +147,24 @@ function NotificationsPage() {
                       <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" />
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p
+                    className={`mt-0.5 text-xs text-muted-foreground ${open ? "" : "line-clamp-2"}`}
+                  >
                     {n.message}
                   </p>
                   <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
                     {relativeTime(n.created_at)}
                   </p>
+                  {open && (
+                    <p className="mt-2 rounded-xl bg-muted px-3 py-2 text-[11px] text-muted-foreground">
+                      {new Date(n.created_at).toLocaleString()}
+                    </p>
+                  )}
                 </div>
               </button>
             );
           })
+
         )}
       </div>
     </div>
