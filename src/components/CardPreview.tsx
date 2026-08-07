@@ -34,7 +34,30 @@ function Barcode({ value, width = 220, height = 60 }: { value: string; width?: n
 
 export function CardPreview({ profile, compact, editablePhoto }: { profile: StudentProfile; compact?: boolean; editablePhoto?: boolean }) {
   const [flipped, setFlipped] = useState(false);
+  const [showSticker, setShowSticker] = useState(false);
   const initials = profile.fullName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+  useEffect(() => {
+    const checkTransport = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
+      if (!userId) return;
+      const { data } = await supabase
+        .from("transport_applications")
+        .select("status, valid_until")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      if (!data || data.status !== "approved" || !data.valid_until) return;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const valid = new Date(data.valid_until);
+      valid.setHours(0, 0, 0, 0);
+      setShowSticker(valid >= today);
+    };
+    void checkTransport();
+  }, []);
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
