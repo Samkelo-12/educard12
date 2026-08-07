@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Bell, Bus, CreditCard, ScanLine, Info } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { ArrowLeft, Bell, Bus, CreditCard, Info, Loader2 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/notifications")({
   head: () => ({
@@ -19,49 +21,80 @@ export const Route = createFileRoute("/notifications")({
   ),
 });
 
-type Notification = {
+type NotificationRow = {
   id: string;
   title: string;
-  body: string;
-  time: string;
-  icon: typeof Bell;
-  unread?: boolean;
+  message: string;
+  type: string;
+  read: boolean;
+  created_at: string;
 };
 
-const notifications: Notification[] = [
-  {
-    id: "1",
-    title: "Transport application approved",
-    body: "Your shuttle pass is now active. Tap to view details.",
-    time: "2m ago",
-    icon: Bus,
-    unread: true,
-  },
-  {
-    id: "2",
-    title: "New card scan",
-    body: "Your card was scanned at Main Gate at 09:14.",
-    time: "1h ago",
-    icon: ScanLine,
-    unread: true,
-  },
-  {
-    id: "3",
-    title: "Digital card updated",
-    body: "Your student card details were refreshed successfully.",
-    time: "Yesterday",
-    icon: CreditCard,
-  },
-  {
-    id: "4",
-    title: "Welcome to WSU Digital Card",
-    body: "Explore your dashboard to get started.",
-    time: "2 days ago",
-    icon: Info,
-  },
-];
+function iconFor(type: string) {
+  switch (type) {
+    case "transport":
+      return Bus;
+    case "card":
+      return CreditCard;
+    case "system":
+      return Info;
+    default:
+      return Bell;
+  }
+}
+
+function relativeTime(iso: string) {
+  const then = new Date(iso);
+  const diffMs = Date.now() - then.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  return then.toLocaleDateString();
+}
 
 function NotificationsPage() {
+  const [items, setItems] = useState<NotificationRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from("notifications")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setItems((data as NotificationRow[]) ?? []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void load();
+    const channel = supabase
+      .channel("notifications-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications" },
+        () => {
+          void load();
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [load]);
+
+  const markRead = async (n: NotificationRow) => {
+    if (n.read) return;
+    setItems((prev) =>
+      prev.map((i) => (i.id === n.id ? { ...i, read: true } : i)),
+    );
+    await supabase.from("notifications").update({ read: true }).eq("id", n.id);
+  };
+
   return (
     <div className="pb-6">
       <header className="bg-gradient-card px-5 pt-12 pb-6 text-primary-foreground">
@@ -78,31 +111,49 @@ function NotificationsPage() {
       </header>
 
       <div className="px-5 -mt-3 space-y-3">
-        {notifications.map((n) => {
-          const Icon = n.icon;
-          return (
-            <div
-              key={n.id}
-              className="flex gap-3 rounded-2xl bg-card p-4 shadow-soft"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Icon className="h-5 w-5" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold truncate">{n.title}</p>
-                  {n.unread && (
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" />
-                  )}
+        {loading ? (
+          <div className="flex justify-center rounded-2xl bg-card p-8 shadow-soft">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : items.length === 0 ? (
+          <div className="rounded-2xl bg-card p-8 text-center shadow-soft">
+            <Bell className="mx-auto h-8 w-8 text-muted-foreground/50" />
+            <p className="mt-3 text-sm font-medium">No notifications yet</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              We'll let you know when something happens.
+            </p>
+          </div>
+        ) : (
+          items.map((n) => {
+            const Icon = iconFor(n.type);
+            return (
+              <button
+                key={n.id}
+                type="button"
+                onClick={() => void markRead(n)}
+                className="flex w-full gap-3 rounded-2xl bg-card p-4 text-left shadow-soft"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-semibold">{n.title}</p>
+                    {!n.read && (
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" />
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {n.message}
+                  </p>
+                  <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {relativeTime(n.created_at)}
+                  </p>
                 </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">{n.body}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {n.time}
-                </p>
-              </div>
-            </div>
-          );
-        })}
+              </button>
+            );
+          })
+        )}
       </div>
     </div>
   );
