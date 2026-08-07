@@ -126,10 +126,7 @@ function TransportInner() {
           <h1 className="text-base font-semibold">Transport</h1>
           <div className="w-10" />
         </div>
-        <div className="mt-5">
-          <p className="text-xs text-primary-foreground/80">Travel pass balance</p>
-          <p className="text-3xl font-bold mt-1">12 trips</p>
-          <p className="text-xs text-primary-foreground/70 mt-1">Renews on 30 Nov</p>
+        <div className="mt-5 h-[76px]">
         </div>
       </header>
 
