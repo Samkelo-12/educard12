@@ -60,6 +60,7 @@ function relativeTime(iso: string) {
 function NotificationsPage() {
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -87,13 +88,15 @@ function NotificationsPage() {
     };
   }, [load]);
 
-  const markRead = async (n: NotificationRow) => {
+  const openNotification = async (n: NotificationRow) => {
+    setOpenId((prev) => (prev === n.id ? null : n.id));
     if (n.read) return;
     setItems((prev) =>
       prev.map((i) => (i.id === n.id ? { ...i, read: true } : i)),
     );
     await supabase.from("notifications").update({ read: true }).eq("id", n.id);
   };
+
 
   return (
     <div className="pb-6">
