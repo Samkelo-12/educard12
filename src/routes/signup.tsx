@@ -167,7 +167,7 @@ function SignUp() {
                   aria-invalid={!!errors.fullName}
                 />
               </Field>
-              <Field label="STUDENT/STAFF NUMBER" error={errors.studentNumber}>
+              <Field label="STUDENT NUMBER" error={errors.studentNumber}>
                 <Input
                   required
                   value={form.studentNumber}
