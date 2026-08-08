@@ -102,7 +102,23 @@ export async function signOut() {
   notifyAuth();
 }
 
-export async function getCurrentProfile(): Promise<StudentProfile | null> {
+// ---------------------------------------------------------------------------
+// Cached session/profile store.
+// The network check runs once on first load; afterwards navigation reads the
+// in-memory cache and onAuthStateChange keeps it fresh in the background.
+// ---------------------------------------------------------------------------
+
+let cachedProfile: StudentProfile | null = null;
+let cacheLoaded = false;
+let inflight: Promise<StudentProfile | null> | null = null;
+const listeners = new Set<() => void>();
+let subscribed = false;
+
+function emit() {
+  listeners.forEach((l) => l());
+}
+
+async function fetchProfile(): Promise<StudentProfile | null> {
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData.session?.user;
   if (!user) return null;
@@ -117,6 +133,29 @@ export async function getCurrentProfile(): Promise<StudentProfile | null> {
   return toProfile(data as ProfileRow);
 }
 
+async function loadProfile(force = false): Promise<StudentProfile | null> {
+  if (!force && cacheLoaded) return cachedProfile;
+  if (!force && inflight) return inflight;
+
+  inflight = fetchProfile()
+    .then((p) => {
+      cachedProfile = p;
+      cacheLoaded = true;
+      return p;
+    })
+    .finally(() => {
+      inflight = null;
+    });
+
+  const result = await inflight;
+  emit();
+  return result;
+}
+
+export async function getCurrentProfile(): Promise<StudentProfile | null> {
+  return loadProfile();
+}
+
 export async function updateProfile(patch: Partial<StudentProfile>) {
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData.session?.user;
@@ -128,31 +167,53 @@ export async function updateProfile(patch: Partial<StudentProfile>) {
     .eq("id", user.id);
 
   if (error) throw new Error("Could not save your changes.");
-  notifyAuth();
+  await loadProfile(true);
+}
+
+function ensureSubscribed() {
+  if (subscribed || typeof window === "undefined") return;
+  subscribed = true;
+
+  window.addEventListener("dsc:auth", () => {
+    void loadProfile(true);
+  });
+
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === "SIGNED_OUT") {
+      cachedProfile = null;
+      cacheLoaded = true;
+      emit();
+      return;
+    }
+    if (event === "TOKEN_REFRESHED") return;
+    void loadProfile(true);
+  });
 }
 
 export function useAuth() {
-  const [profile, setProfile] = useState<StudentProfile | null>(null);
-  const [ready, setReady] = useState(false);
+  const [profile, setProfile] = useState<StudentProfile | null>(cachedProfile);
+  const [ready, setReady] = useState(cacheLoaded);
 
   const refresh = useCallback(async () => {
-    const p = await getCurrentProfile();
-    setProfile(p);
-    setReady(true);
+    await loadProfile(true);
   }, []);
 
   useEffect(() => {
-    void refresh();
-    const handler = () => void refresh();
-    window.addEventListener("dsc:auth", handler);
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      handler();
-    });
-    return () => {
-      window.removeEventListener("dsc:auth", handler);
-      sub.subscription.unsubscribe();
+    ensureSubscribed();
+
+    const sync = () => {
+      setProfile(cachedProfile);
+      setReady(cacheLoaded);
     };
-  }, [refresh]);
+    listeners.add(sync);
+
+    if (cacheLoaded) sync();
+    else void loadProfile().then(sync);
+
+    return () => {
+      listeners.delete(sync);
+    };
+  }, []);
 
   return { profile, ready, refresh };
 }
@@ -162,3 +223,4 @@ export function notifyAuth() {
     window.dispatchEvent(new Event("dsc:auth"));
   }
 }
+
