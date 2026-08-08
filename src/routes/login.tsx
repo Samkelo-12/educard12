@@ -62,6 +62,11 @@ function Login() {
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            <div className="pt-1 text-right">
+              <Link to="/forgot-password" className="text-sm font-semibold text-primary">
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <Button type="submit" className="w-full h-11 bg-gradient-primary shadow-soft">
