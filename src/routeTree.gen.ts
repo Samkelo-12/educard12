@@ -13,6 +13,7 @@ import { Route as TransportRouteImport } from './routes/transport'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ScanRouteImport } from './routes/scan'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -40,6 +41,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ScanRoute = ScanRouteImport.update({
   id: '/scan',
   path: '/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/privacy'
     | '/profile'
+    | '/reset-password'
     | '/scan'
     | '/settings'
     | '/signup'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/privacy'
     | '/profile'
+    | '/reset-password'
     | '/scan'
     | '/settings'
     | '/signup'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/privacy'
     | '/profile'
+    | '/reset-password'
     | '/scan'
     | '/settings'
     | '/signup'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ScanRoute: typeof ScanRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
@@ -214,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: '/scan'
       fullPath: '/scan'
       preLoaderRoute: typeof ScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ScanRoute: ScanRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
