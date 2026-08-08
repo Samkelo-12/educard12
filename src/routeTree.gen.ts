@@ -13,10 +13,12 @@ import { Route as TransportRouteImport } from './routes/transport'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ScanRouteImport } from './routes/scan'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CardRouteImport } from './routes/card'
 import { Route as IndexRouteImport } from './routes/index'
@@ -41,6 +43,11 @@ const ScanRoute = ScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -59,6 +66,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -81,10 +93,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/card': typeof CardRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
@@ -94,10 +108,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/card': typeof CardRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
@@ -108,10 +124,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/card': typeof CardRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
@@ -123,10 +141,12 @@ export interface FileRouteTypes {
     | '/'
     | '/card'
     | '/dashboard'
+    | '/forgot-password'
     | '/login'
     | '/notifications'
     | '/privacy'
     | '/profile'
+    | '/reset-password'
     | '/scan'
     | '/settings'
     | '/signup'
@@ -136,10 +156,12 @@ export interface FileRouteTypes {
     | '/'
     | '/card'
     | '/dashboard'
+    | '/forgot-password'
     | '/login'
     | '/notifications'
     | '/privacy'
     | '/profile'
+    | '/reset-password'
     | '/scan'
     | '/settings'
     | '/signup'
@@ -149,10 +171,12 @@ export interface FileRouteTypes {
     | '/'
     | '/card'
     | '/dashboard'
+    | '/forgot-password'
     | '/login'
     | '/notifications'
     | '/privacy'
     | '/profile'
+    | '/reset-password'
     | '/scan'
     | '/settings'
     | '/signup'
@@ -163,10 +187,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CardRoute: typeof CardRoute
   DashboardRoute: typeof DashboardRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ScanRoute: typeof ScanRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
@@ -203,6 +229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -229,6 +262,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -259,10 +299,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CardRoute: CardRoute,
   DashboardRoute: DashboardRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ScanRoute: ScanRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
@@ -271,13 +313,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
