@@ -43,7 +43,11 @@ function PrivacyPage() {
         </section>
 
         <section className="rounded-2xl bg-card shadow-soft divide-y divide-border">
-          <LinkRow icon={KeyRound} label="Change password" onClick={() => toast("Password reset link sent to your email")} />
+          <Link to="/change-password" className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+            <KeyRound className="h-5 w-5 text-primary" />
+            <span className="flex-1 text-sm font-medium">Change password</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
           <LinkRow icon={Lock} label="Active sessions" value="2 devices" onClick={() => toast("You are signed in on 2 devices")} />
         </section>
 
