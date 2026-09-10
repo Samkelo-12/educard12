@@ -45,10 +45,7 @@ function CardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Button variant="outline" className="h-12">Add to Wallet</Button>
-        <Button className="h-12 bg-gradient-primary">Report lost</Button>
-      </div>
+      <Button className="h-12 w-full bg-gradient-primary">Report lost</Button>
     </div>
   );
 }
