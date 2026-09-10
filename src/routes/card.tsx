@@ -45,7 +45,7 @@ function CardPage() {
         </div>
       </div>
 
-      <Button className="h-12 w-full bg-gradient-primary">Report lost</Button>
+      
     </div>
   );
 }
