@@ -34,16 +34,6 @@ function CardPage() {
         <CardPreview profile={profile} editablePhoto />
       </div>
 
-      <div className="rounded-2xl bg-card p-4 shadow-soft space-y-3">
-        <h3 className="text-sm font-semibold">Verification</h3>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Show this QR code to staff or scan it at access points. The code refreshes automatically every 60 seconds for security.
-        </p>
-        <div className="flex items-center gap-2 text-xs">
-          <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-          <span className="font-medium">Secure session active</span>
-        </div>
-      </div>
 
       
     </div>
