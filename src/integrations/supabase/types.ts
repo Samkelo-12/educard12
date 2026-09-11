@@ -125,6 +125,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          analytics_opt_in: boolean
+          created_at: string
+          dark_mode: boolean
+          hide_card: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analytics_opt_in?: boolean
+          created_at?: string
+          dark_mode?: boolean
+          hide_card?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analytics_opt_in?: boolean
+          created_at?: string
+          dark_mode?: boolean
+          hide_card?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
