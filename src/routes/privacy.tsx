@@ -1,11 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, Lock, Eye, Fingerprint, KeyRound, ShieldCheck, ChevronRight } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Lock, Eye, Fingerprint, KeyRound, ShieldCheck, ChevronRight, ArrowLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { usePreferences, resetPreferencesCache } from "@/lib/preferences";
+import { deleteMyAccount } from "@/lib/account.functions";
+import { signOut } from "@/lib/auth-store";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/privacy")({
   component: () => (
@@ -18,9 +33,53 @@ export const Route = createFileRoute("/privacy")({
 });
 
 function PrivacyPage() {
-  const [biometrics, setBiometrics] = useState(true);
-  const [hideCard, setHideCard] = useState(false);
-  const [analytics, setAnalytics] = useState(true);
+  const { prefs, ready, update } = usePreferences();
+  const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [sessionSince, setSessionSince] = useState<string | null>(null);
+
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => {
+      const at = data.session?.user.last_sign_in_at;
+      if (at) {
+        setSessionSince(
+          new Date(at).toLocaleString(undefined, {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        );
+      }
+    });
+  }, []);
+
+  const set = async (patch: Parameters<typeof update>[0]) => {
+    setSaving(true);
+    try {
+      await update(patch);
+      toast.success("Setting saved");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteMyAccount();
+      resetPreferencesCache();
+      await signOut();
+      toast.success("Your account and data have been deleted");
+      navigate({ to: "/login" });
+    } catch {
+      toast.error("Could not delete your account. Please try again.");
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="pb-6">
@@ -37,9 +96,31 @@ function PrivacyPage() {
 
       <div className="-mt-10 px-5 space-y-5">
         <section className="rounded-2xl bg-card shadow-soft divide-y divide-border">
-          <ToggleRow icon={Fingerprint} label="Biometric unlock" description="Use fingerprint or Face ID" value={biometrics} onChange={setBiometrics} />
-          <ToggleRow icon={Eye} label="Hide card on lock screen" description="Blur card preview when locked" value={hideCard} onChange={setHideCard} />
-          <ToggleRow icon={ShieldCheck} label="Anonymous analytics" description="Help improve the app" value={analytics} onChange={setAnalytics} />
+          <ToggleRow
+            icon={Fingerprint}
+            label="Biometric unlock"
+            description="Available in a future release"
+            value={false}
+            disabled
+            badge="Coming soon"
+            onChange={() => {}}
+          />
+          <ToggleRow
+            icon={Eye}
+            label="Hide card details until tapped"
+            description="Blurs your card preview on the home screen"
+            value={prefs.hideCard}
+            disabled={!ready || saving}
+            onChange={(v) => void set({ hideCard: v })}
+          />
+          <ToggleRow
+            icon={ShieldCheck}
+            label="Anonymous analytics"
+            description="Allow anonymous usage data to improve the app"
+            value={prefs.analyticsOptIn}
+            disabled={!ready || saving}
+            onChange={(v) => void set({ analyticsOptIn: v })}
+          />
         </section>
 
         <section className="rounded-2xl bg-card shadow-soft divide-y divide-border">
@@ -48,16 +129,57 @@ function PrivacyPage() {
             <span className="flex-1 text-sm font-medium">Change password</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
-          <LinkRow icon={Lock} label="Active sessions" value="2 devices" onClick={() => toast("You are signed in on 2 devices")} />
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <Lock className="h-5 w-5 text-primary" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">This device</p>
+              <p className="text-[11px] text-muted-foreground">
+                {sessionSince ? `Signed in ${sessionSince}` : "Signed in"}
+              </p>
+            </div>
+            <button
+              className="text-xs font-semibold text-destructive"
+              onClick={() => {
+                void signOut().then(() => {
+                  resetPreferencesCache();
+                  navigate({ to: "/login" });
+                });
+              }}
+            >
+              Sign out
+            </button>
+          </div>
         </section>
 
-        <Button
-          variant="outline"
-          className="w-full h-12 gap-2 text-destructive border-destructive/30 hover:bg-destructive/5"
-          onClick={() => toast.success("Account deletion request submitted")}
-        >
-          Delete my account
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              disabled={deleting}
+              className="w-full h-12 gap-2 text-destructive border-destructive/30 hover:bg-destructive/5"
+            >
+              {deleting ? "Deleting…" : "Delete my account"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This permanently deletes your student card details, transport applications and
+                notifications. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => void handleDelete()}
+              >
+                Delete permanently
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <p className="text-center text-[10px] text-muted-foreground leading-relaxed">
           We protect your data in line with WSU privacy policy and POPIA.
@@ -67,26 +189,38 @@ function PrivacyPage() {
   );
 }
 
-function ToggleRow({ icon: Icon, label, description, value, onChange }: { icon: typeof Lock; label: string; description: string; value: boolean; onChange: (v: boolean) => void }) {
+function ToggleRow({
+  icon: Icon,
+  label,
+  description,
+  value,
+  onChange,
+  disabled,
+  badge,
+}: {
+  icon: typeof Lock;
+  label: string;
+  description: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+  badge?: string;
+}) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
+    <div className={`flex items-center gap-3 px-4 py-3.5 ${badge ? "opacity-60" : ""}`}>
       <Icon className="h-5 w-5 text-primary" />
       <div className="flex-1">
-        <p className="text-sm font-medium">{label}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium">{label}</p>
+          {badge && (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {badge}
+            </span>
+          )}
+        </div>
         <p className="text-[11px] text-muted-foreground">{description}</p>
       </div>
-      <Switch checked={value} onCheckedChange={onChange} />
+      <Switch checked={value} onCheckedChange={onChange} disabled={disabled} />
     </div>
-  );
-}
-
-function LinkRow({ icon: Icon, label, value, onClick }: { icon: typeof Lock; label: string; value?: string; onClick?: () => void }) {
-  return (
-    <button onClick={onClick} className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
-      <Icon className="h-5 w-5 text-primary" />
-      <span className="flex-1 text-sm font-medium">{label}</span>
-      {value && <span className="text-xs text-muted-foreground">{value}</span>}
-      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-    </button>
   );
 }
