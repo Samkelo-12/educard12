@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Bell, CreditCard, ScanLine, Bus } from "lucide-react";
+import { Bell, CreditCard, ScanLine, Bus, Eye } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-store";
 import { CardPreview } from "@/components/CardPreview";
 import { supabase } from "@/integrations/supabase/client";
+import { usePreferences } from "@/lib/preferences";
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -20,6 +21,8 @@ export const Route = createFileRoute("/dashboard")({
 
 function Dashboard() {
   const { profile } = useAuth();
+  const { prefs } = usePreferences();
+  const [revealed, setRevealed] = useState(false);
   const [unread, setUnread] = useState(0);
 
   const loadUnread = useCallback(async () => {
@@ -66,9 +69,27 @@ function Dashboard() {
 
       </header>
 
-      <Link to="/card" className="block">
-        <CardPreview profile={profile} compact />
-      </Link>
+      {prefs.hideCard && !revealed ? (
+        <div className="relative">
+          <div className="pointer-events-none blur-md select-none">
+            <CardPreview profile={profile} compact />
+          </div>
+          <button
+            type="button"
+            onClick={() => setRevealed(true)}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-3xl bg-background/30"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-soft">
+              <Eye className="h-5 w-5" />
+            </span>
+            <span className="text-xs font-medium">Tap to show card details</span>
+          </button>
+        </div>
+      ) : (
+        <Link to="/card" className="block">
+          <CardPreview profile={profile} compact />
+        </Link>
+      )}
 
       <section>
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Quick actions</h2>
