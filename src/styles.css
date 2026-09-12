@@ -129,7 +129,14 @@
   --gradient-accent: linear-gradient(135deg, oklch(0.30 0 0), oklch(0.50 0 0));
   --gradient-mesh: radial-gradient(at 20% 10%, oklch(1 0 0 / 0.05) 0, transparent 50%),
                    radial-gradient(at 80% 90%, oklch(1 0 0 / 0.04) 0, transparent 50%);
+
+  --shadow-card: 0 10px 30px -12px oklch(0 0 0 / 0.75);
+  --shadow-soft: 0 4px 20px -6px oklch(0 0 0 / 0.6);
+  --shadow-glow: 0 0 40px oklch(1 0 0 / 0.10);
 }
+
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
 
 @layer base {
   * {
@@ -164,10 +171,13 @@
   .shadow-glow { box-shadow: var(--shadow-glow); }
 
   .glass {
-    background: color-mix(in oklab, white 70%, transparent);
+    background: color-mix(in oklab, var(--background) 78%, transparent);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
   }
+
+  /* Camera viewfinder stays dark in both themes for contrast against the live feed. */
+  .scanner-surface { background-color: oklch(0.12 0 0); color: oklch(0.99 0 0); }
 
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { scrollbar-width: none; }

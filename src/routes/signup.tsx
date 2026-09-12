@@ -279,7 +279,7 @@ function PasswordStrength({ password }: { password: string }) {
   const score = checks.filter((c) => c.ok).length;
   const label = score <= 2 ? "Weak" : score <= 4 ? "Medium" : "Strong";
   const barClass = score <= 2 ? "bg-destructive" : score <= 4 ? "bg-amber-500" : "bg-emerald-500";
-  const textClass = score <= 2 ? "text-destructive" : score <= 4 ? "text-amber-600" : "text-emerald-600";
+  const textClass = score <= 2 ? "text-destructive" : score <= 4 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400";
 
   return (
     <div className="space-y-2 pt-1">
@@ -291,7 +291,7 @@ function PasswordStrength({ password }: { password: string }) {
       </div>
       <ul className="space-y-1">
         {checks.map((c) => (
-          <li key={c.label} className={`flex items-center gap-1.5 text-xs ${c.ok ? "text-emerald-600" : "text-muted-foreground"}`}>
+          <li key={c.label} className={`flex items-center gap-1.5 text-xs ${c.ok ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
             {c.ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
             {c.label}
             {!c.required ? <span className="text-muted-foreground/70">(optional)</span> : null}

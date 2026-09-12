@@ -18,17 +18,35 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
+const DARK_KEY = "educard-dark";
+
 export function applyDarkMode(enabled: boolean) {
   if (typeof document === "undefined") return;
   document.documentElement.classList.toggle("dark", enabled);
+  try {
+    localStorage.setItem(DARK_KEY, enabled ? "1" : "0");
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+// Mirror of the saved preference so pre-login screens render in the right theme immediately.
+export function storedDarkMode(): boolean {
+  if (typeof localStorage === "undefined") return false;
+  try {
+    return localStorage.getItem(DARK_KEY) === "1";
+  } catch {
+    return false;
+  }
 }
 
 async function load(): Promise<Preferences> {
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData.session?.user;
   if (!user) {
-    cached = DEFAULTS;
+    cached = { ...DEFAULTS, darkMode: storedDarkMode() };
     loaded = true;
+    applyDarkMode(cached.darkMode);
     emit();
     return cached;
   }
@@ -104,8 +122,7 @@ export function usePreferences() {
 }
 
 export function resetPreferencesCache() {
-  cached = DEFAULTS;
+  cached = { ...DEFAULTS, darkMode: storedDarkMode() };
   loaded = false;
-  applyDarkMode(false);
   emit();
 }

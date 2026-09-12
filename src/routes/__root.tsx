@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
+import { usePreferences } from "@/lib/preferences";
 
 function NotFoundComponent() {
   return (
@@ -101,11 +102,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('educard-dark')==='1'){document.documentElement.classList.add('dark')}}catch(e){}",
+          }}
+        />
         {children}
         <Scripts />
       </body>
@@ -113,11 +120,18 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ThemeSync() {
+  // Loads the signed-in user's saved theme once and keeps the <html> class in sync app-wide.
+  usePreferences();
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeSync />
       <Outlet />
       <Toaster position="top-center" />
     </QueryClientProvider>
