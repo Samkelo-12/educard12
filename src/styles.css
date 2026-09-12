@@ -176,6 +176,9 @@ html.dark { color-scheme: dark; }
     -webkit-backdrop-filter: blur(16px);
   }
 
+  /* Camera viewfinder stays dark in both themes for contrast against the live feed. */
+  .scanner-surface { background-color: oklch(0.12 0 0); color: oklch(0.99 0 0); }
+
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { scrollbar-width: none; }
 

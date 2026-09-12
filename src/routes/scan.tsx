@@ -141,7 +141,7 @@ function Scan() {
   const showWebVideo = state === "idle" && !Capacitor.isNativePlatform();
 
   return (
-    <div className="relative min-h-full bg-foreground text-primary-foreground">
+    <div className="relative min-h-full scanner-surface">
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-12 pb-4">
         <Link to="/dashboard" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur">
           <ArrowLeft className="h-5 w-5" />
