@@ -38,7 +38,7 @@ export function BottomNav() {
               key={to}
               to={to}
               className={`flex flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium transition-colors ${
-                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className={`h-5 w-5 ${active ? "stroke-[2.5]" : ""}`} />
