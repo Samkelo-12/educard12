@@ -20,7 +20,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function Dashboard() {
-  const { profile } = useAuth();
+  const { profile, ready } = useAuth();
   const { prefs } = usePreferences();
   const [revealed, setRevealed] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -49,6 +49,14 @@ function Dashboard() {
       void supabase.removeChannel(channel);
     };
   }, [loadUnread]);
+
+  if (!ready) {
+    return (
+      <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+        Loading your dashboard…
+      </div>
+    );
+  }
 
   if (!profile) return null;
   const firstName = profile.fullName.split(" ")[0];
