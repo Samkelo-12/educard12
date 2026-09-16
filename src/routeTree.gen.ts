@@ -23,6 +23,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChangePasswordRouteImport } from './routes/change-password'
 import { Route as CardRouteImport } from './routes/card'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicAdminReviewApplicationRouteImport } from './routes/api/public/admin-review-application'
 
 const TransportRoute = TransportRouteImport.update({
   id: '/transport',
@@ -94,6 +95,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAdminReviewApplicationRoute =
+  ApiPublicAdminReviewApplicationRouteImport.update({
+    id: '/api/public/admin-review-application',
+    path: '/api/public/admin-review-application',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
+  '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +134,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
+  '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +152,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
+  '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/transport'
+    | '/api/public/admin-review-application'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/transport'
+    | '/api/public/admin-review-application'
   id:
     | '__root__'
     | '/'
@@ -193,6 +205,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/transport'
+    | '/api/public/admin-review-application'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +223,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   TransportRoute: typeof TransportRoute
+  ApiPublicAdminReviewApplicationRoute: typeof ApiPublicAdminReviewApplicationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -312,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/admin-review-application': {
+      id: '/api/public/admin-review-application'
+      path: '/api/public/admin-review-application'
+      fullPath: '/api/public/admin-review-application'
+      preLoaderRoute: typeof ApiPublicAdminReviewApplicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -330,6 +351,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   TransportRoute: TransportRoute,
+  ApiPublicAdminReviewApplicationRoute: ApiPublicAdminReviewApplicationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
