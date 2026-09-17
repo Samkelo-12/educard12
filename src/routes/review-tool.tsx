@@ -100,7 +100,7 @@ function ReviewToolPage() {
         <div className="space-y-1 text-center">
           <h1 className="text-xl font-bold">Transport Review</h1>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Demo / workflow tool — not part of the main app
+            Your EduCard transport management
           </p>
         </div>
 
