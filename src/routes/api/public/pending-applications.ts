@@ -36,7 +36,7 @@ export const Route = createFileRoute('/api/public/pending-applications')({
 
         const { data, error } = await supabaseAdmin
           .from('transport_applications')
-          .select('id, pickup_point, dropoff_point, period, status, created_at, profiles:user_id ( full_name, student_number )')
+          .select('id, user_id, pickup_point, dropoff_point, period, status, created_at')
           .eq('status', 'pending')
           .order('created_at', { ascending: true });
 
@@ -44,8 +44,22 @@ export const Route = createFileRoute('/api/public/pending-applications')({
           return json({ success: false, error: error.message }, 500);
         }
 
-        const applications = (data ?? []).map((row) => {
-          const profile = row.profiles as unknown as { full_name: string; student_number: string } | null;
+        const rows = data ?? [];
+        const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
+        const profileMap = new Map<string, { full_name: string; student_number: string }>();
+
+        if (userIds.length > 0) {
+          const { data: profiles } = await supabaseAdmin
+            .from('profiles')
+            .select('id, full_name, student_number')
+            .in('id', userIds);
+          for (const p of profiles ?? []) {
+            profileMap.set(p.id, { full_name: p.full_name, student_number: p.student_number });
+          }
+        }
+
+        const applications = rows.map((row) => {
+          const profile = profileMap.get(row.user_id) ?? null;
           return {
             id: row.id,
             pickup_point: row.pickup_point,
