@@ -13,6 +13,7 @@ import { Route as TransportRouteImport } from './routes/transport'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ScanRouteImport } from './routes/scan'
+import { Route as ReviewToolRouteImport } from './routes/review-tool'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -23,6 +24,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChangePasswordRouteImport } from './routes/change-password'
 import { Route as CardRouteImport } from './routes/card'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicPendingApplicationsRouteImport } from './routes/api/public/pending-applications'
 import { Route as ApiPublicAdminReviewApplicationRouteImport } from './routes/api/public/admin-review-application'
 
 const TransportRoute = TransportRouteImport.update({
@@ -43,6 +45,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ScanRoute = ScanRouteImport.update({
   id: '/scan',
   path: '/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewToolRoute = ReviewToolRouteImport.update({
+  id: '/review-tool',
+  path: '/review-tool',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -95,6 +102,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPendingApplicationsRoute =
+  ApiPublicPendingApplicationsRouteImport.update({
+    id: '/api/public/pending-applications',
+    path: '/api/public/pending-applications',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAdminReviewApplicationRoute =
   ApiPublicAdminReviewApplicationRouteImport.update({
     id: '/api/public/admin-review-application',
@@ -113,11 +126,13 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/review-tool': typeof ReviewToolRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
+  '/api/public/pending-applications': typeof ApiPublicPendingApplicationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -130,11 +145,13 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/review-tool': typeof ReviewToolRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
+  '/api/public/pending-applications': typeof ApiPublicPendingApplicationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -148,11 +165,13 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/review-tool': typeof ReviewToolRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
+  '/api/public/pending-applications': typeof ApiPublicPendingApplicationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,11 +186,13 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/reset-password'
+    | '/review-tool'
     | '/scan'
     | '/settings'
     | '/signup'
     | '/transport'
     | '/api/public/admin-review-application'
+    | '/api/public/pending-applications'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -184,11 +205,13 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/reset-password'
+    | '/review-tool'
     | '/scan'
     | '/settings'
     | '/signup'
     | '/transport'
     | '/api/public/admin-review-application'
+    | '/api/public/pending-applications'
   id:
     | '__root__'
     | '/'
@@ -201,11 +224,13 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/reset-password'
+    | '/review-tool'
     | '/scan'
     | '/settings'
     | '/signup'
     | '/transport'
     | '/api/public/admin-review-application'
+    | '/api/public/pending-applications'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -219,11 +244,13 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ReviewToolRoute: typeof ReviewToolRoute
   ScanRoute: typeof ScanRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   TransportRoute: typeof TransportRoute
   ApiPublicAdminReviewApplicationRoute: typeof ApiPublicAdminReviewApplicationRoute
+  ApiPublicPendingApplicationsRoute: typeof ApiPublicPendingApplicationsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -254,6 +281,13 @@ declare module '@tanstack/react-router' {
       path: '/scan'
       fullPath: '/scan'
       preLoaderRoute: typeof ScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review-tool': {
+      id: '/review-tool'
+      path: '/review-tool'
+      fullPath: '/review-tool'
+      preLoaderRoute: typeof ReviewToolRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -326,6 +360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/pending-applications': {
+      id: '/api/public/pending-applications'
+      path: '/api/public/pending-applications'
+      fullPath: '/api/public/pending-applications'
+      preLoaderRoute: typeof ApiPublicPendingApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/admin-review-application': {
       id: '/api/public/admin-review-application'
       path: '/api/public/admin-review-application'
@@ -347,11 +388,13 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ReviewToolRoute: ReviewToolRoute,
   ScanRoute: ScanRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   TransportRoute: TransportRoute,
   ApiPublicAdminReviewApplicationRoute: ApiPublicAdminReviewApplicationRoute,
+  ApiPublicPendingApplicationsRoute: ApiPublicPendingApplicationsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
