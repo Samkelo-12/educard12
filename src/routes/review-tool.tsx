@@ -100,7 +100,7 @@ function ReviewToolPage() {
         <div className="space-y-1 text-center">
           <h1 className="text-xl font-bold">Transport Review</h1>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Your EduCard transport management
+            EduCard Transport Command Centre
           </p>
         </div>
 
