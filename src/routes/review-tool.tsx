@@ -107,14 +107,14 @@ function ReviewToolPage() {
         {!unlocked ? (
           <form onSubmit={unlock} className="space-y-4 rounded-2xl border border-border bg-card p-6">
             <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Secret</Label>
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Secret Key</Label>
               <Input
                 type="password"
                 required
                 value={secretInput}
                 onChange={(e) => setSecretInput(e.target.value)}
                 className="h-11"
-                placeholder="Enter admin secret"
+                placeholder="Enter admin secret key"
               />
             </div>
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
