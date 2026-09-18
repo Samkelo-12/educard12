@@ -25,6 +25,7 @@ import { Route as ChangePasswordRouteImport } from './routes/change-password'
 import { Route as CardRouteImport } from './routes/card'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicPendingApplicationsRouteImport } from './routes/api/public/pending-applications'
+import { Route as ApiPublicApplicationHistoryRouteImport } from './routes/api/public/application-history'
 import { Route as ApiPublicAdminReviewApplicationRouteImport } from './routes/api/public/admin-review-application'
 
 const TransportRoute = TransportRouteImport.update({
@@ -108,6 +109,12 @@ const ApiPublicPendingApplicationsRoute =
     path: '/api/public/pending-applications',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicApplicationHistoryRoute =
+  ApiPublicApplicationHistoryRouteImport.update({
+    id: '/api/public/application-history',
+    path: '/api/public/application-history',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAdminReviewApplicationRoute =
   ApiPublicAdminReviewApplicationRouteImport.update({
     id: '/api/public/admin-review-application',
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
+  '/api/public/application-history': typeof ApiPublicApplicationHistoryRoute
   '/api/public/pending-applications': typeof ApiPublicPendingApplicationsRoute
 }
 export interface FileRoutesByTo {
@@ -151,6 +159,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
+  '/api/public/application-history': typeof ApiPublicApplicationHistoryRoute
   '/api/public/pending-applications': typeof ApiPublicPendingApplicationsRoute
 }
 export interface FileRoutesById {
@@ -171,6 +180,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
+  '/api/public/application-history': typeof ApiPublicApplicationHistoryRoute
   '/api/public/pending-applications': typeof ApiPublicPendingApplicationsRoute
 }
 export interface FileRouteTypes {
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/transport'
     | '/api/public/admin-review-application'
+    | '/api/public/application-history'
     | '/api/public/pending-applications'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/transport'
     | '/api/public/admin-review-application'
+    | '/api/public/application-history'
     | '/api/public/pending-applications'
   id:
     | '__root__'
@@ -230,6 +242,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/transport'
     | '/api/public/admin-review-application'
+    | '/api/public/application-history'
     | '/api/public/pending-applications'
   fileRoutesById: FileRoutesById
 }
@@ -250,6 +263,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   TransportRoute: typeof TransportRoute
   ApiPublicAdminReviewApplicationRoute: typeof ApiPublicAdminReviewApplicationRoute
+  ApiPublicApplicationHistoryRoute: typeof ApiPublicApplicationHistoryRoute
   ApiPublicPendingApplicationsRoute: typeof ApiPublicPendingApplicationsRoute
 }
 
@@ -367,6 +381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPendingApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/application-history': {
+      id: '/api/public/application-history'
+      path: '/api/public/application-history'
+      fullPath: '/api/public/application-history'
+      preLoaderRoute: typeof ApiPublicApplicationHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/admin-review-application': {
       id: '/api/public/admin-review-application'
       path: '/api/public/admin-review-application'
@@ -394,6 +415,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   TransportRoute: TransportRoute,
   ApiPublicAdminReviewApplicationRoute: ApiPublicAdminReviewApplicationRoute,
+  ApiPublicApplicationHistoryRoute: ApiPublicApplicationHistoryRoute,
   ApiPublicPendingApplicationsRoute: ApiPublicPendingApplicationsRoute,
 }
 export const routeTree = rootRouteImport
