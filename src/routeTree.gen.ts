@@ -25,6 +25,7 @@ import { Route as ChangePasswordRouteImport } from './routes/change-password'
 import { Route as CardRouteImport } from './routes/card'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicPendingApplicationsRouteImport } from './routes/api/public/pending-applications'
+import { Route as ApiPublicBiometricLoginRouteImport } from './routes/api/public/biometric-login'
 import { Route as ApiPublicApplicationHistoryRouteImport } from './routes/api/public/application-history'
 import { Route as ApiPublicAdminReviewApplicationRouteImport } from './routes/api/public/admin-review-application'
 
@@ -109,6 +110,11 @@ const ApiPublicPendingApplicationsRoute =
     path: '/api/public/pending-applications',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBiometricLoginRoute = ApiPublicBiometricLoginRouteImport.update({
+  id: '/api/public/biometric-login',
+  path: '/api/public/biometric-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicApplicationHistoryRoute =
   ApiPublicApplicationHistoryRouteImport.update({
     id: '/api/public/application-history',
@@ -140,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
   '/api/public/application-history': typeof ApiPublicApplicationHistoryRoute
+  '/api/public/biometric-login': typeof ApiPublicBiometricLoginRoute
   '/api/public/pending-applications': typeof ApiPublicPendingApplicationsRoute
 }
 export interface FileRoutesByTo {
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
   '/api/public/application-history': typeof ApiPublicApplicationHistoryRoute
+  '/api/public/biometric-login': typeof ApiPublicBiometricLoginRoute
   '/api/public/pending-applications': typeof ApiPublicPendingApplicationsRoute
 }
 export interface FileRoutesById {
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
   '/api/public/application-history': typeof ApiPublicApplicationHistoryRoute
+  '/api/public/biometric-login': typeof ApiPublicBiometricLoginRoute
   '/api/public/pending-applications': typeof ApiPublicPendingApplicationsRoute
 }
 export interface FileRouteTypes {
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/transport'
     | '/api/public/admin-review-application'
     | '/api/public/application-history'
+    | '/api/public/biometric-login'
     | '/api/public/pending-applications'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/transport'
     | '/api/public/admin-review-application'
     | '/api/public/application-history'
+    | '/api/public/biometric-login'
     | '/api/public/pending-applications'
   id:
     | '__root__'
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
     | '/transport'
     | '/api/public/admin-review-application'
     | '/api/public/application-history'
+    | '/api/public/biometric-login'
     | '/api/public/pending-applications'
   fileRoutesById: FileRoutesById
 }
@@ -264,6 +276,7 @@ export interface RootRouteChildren {
   TransportRoute: typeof TransportRoute
   ApiPublicAdminReviewApplicationRoute: typeof ApiPublicAdminReviewApplicationRoute
   ApiPublicApplicationHistoryRoute: typeof ApiPublicApplicationHistoryRoute
+  ApiPublicBiometricLoginRoute: typeof ApiPublicBiometricLoginRoute
   ApiPublicPendingApplicationsRoute: typeof ApiPublicPendingApplicationsRoute
 }
 
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPendingApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/biometric-login': {
+      id: '/api/public/biometric-login'
+      path: '/api/public/biometric-login'
+      fullPath: '/api/public/biometric-login'
+      preLoaderRoute: typeof ApiPublicBiometricLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/application-history': {
       id: '/api/public/application-history'
       path: '/api/public/application-history'
@@ -416,6 +436,7 @@ const rootRouteChildren: RootRouteChildren = {
   TransportRoute: TransportRoute,
   ApiPublicAdminReviewApplicationRoute: ApiPublicAdminReviewApplicationRoute,
   ApiPublicApplicationHistoryRoute: ApiPublicApplicationHistoryRoute,
+  ApiPublicBiometricLoginRoute: ApiPublicBiometricLoginRoute,
   ApiPublicPendingApplicationsRoute: ApiPublicPendingApplicationsRoute,
 }
 export const routeTree = rootRouteImport

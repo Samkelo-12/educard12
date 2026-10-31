@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, Fingerprint, GraduationCap, Mail, Lock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn } from "@/lib/auth-store";
+import { biometricSignIn, getStoredCredential } from "@/lib/biometric";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -17,6 +18,26 @@ function Login() {
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [hasBiometric, setHasBiometric] = useState(false);
+  const [biometricBusy, setBiometricBusy] = useState(false);
+
+  useEffect(() => {
+    void getStoredCredential().then((cred) => setHasBiometric(Boolean(cred)));
+  }, []);
+
+  const handleBiometric = async () => {
+    setBiometricBusy(true);
+    try {
+      await biometricSignIn();
+      toast.success("Welcome back!");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBiometricBusy(false);
+    }
+  };
+
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,18 +94,28 @@ function Login() {
             Sign in
           </Button>
 
-          <div className="flex items-center gap-3 py-2">
-            <span className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">or</span>
-            <span className="h-px flex-1 bg-border" />
-          </div>
+          {hasBiometric && (
+            <>
+              <div className="flex items-center gap-3 py-2">
+                <span className="h-px flex-1 bg-border" />
+                <span className="text-xs text-muted-foreground">or</span>
+                <span className="h-px flex-1 bg-border" />
+              </div>
 
-          <Button type="button" variant="outline" className="w-full h-11 gap-2"
-            onClick={() => toast.info("Biometric login coming soon")}>
-            <Fingerprint className="h-5 w-5 text-primary" />
-            Use biometric login
-          </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={biometricBusy}
+                className="w-full h-11 gap-2"
+                onClick={() => void handleBiometric()}
+              >
+                <Fingerprint className="h-5 w-5 text-primary" />
+                {biometricBusy ? "Verifying…" : "Use biometric login"}
+              </Button>
+            </>
+          )}
         </form>
+
 
         <div className="mt-auto px-6 py-8 text-center text-sm text-muted-foreground">
           New here?{" "}
