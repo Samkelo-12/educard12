@@ -15,6 +15,13 @@
       "when": 1793441876052,
       "tag": "0001_create_biometric_credentials",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793537735094,
+      "tag": "0002_create_push_tokens",
+      "breakpoints": true
     }
   ]
 }
