@@ -1,7 +1,7 @@
 // Browser-side push notification registration (web push via Firebase Cloud Messaging).
 // The Firebase web credentials are synced by the Firebase Cloud Messaging connector
 // as VITE_ variables; the connection must have "Include web push" selected.
-import { registerPushToken } from "@/lib/push.functions";
+import { registerPushToken, removePushToken } from "@/lib/push.functions";
 
 const appId = import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_APP_ID as string | undefined;
 const vapidKey = import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_VAPID_KEY as string | undefined;
