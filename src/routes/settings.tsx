@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Bell, Moon, Globe, Wifi, Trash2 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { usePreferences } from "@/lib/preferences";
+import { enablePush, disablePush, pushRegistrationState } from "@/lib/push";
 
 export const Route = createFileRoute("/settings")({
   component: () => (
@@ -22,6 +23,12 @@ function SettingsPage() {
   const { prefs, ready, update } = usePreferences();
   const [saving, setSaving] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [pushOn, setPushOn] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => {
+    setPushOn(pushRegistrationState() === "on");
+  }, []);
 
   const setDark = async (v: boolean) => {
     setSaving(true);
@@ -31,6 +38,41 @@ function SettingsPage() {
       toast.error((err as Error).message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const setPush = async (v: boolean) => {
+    setPushBusy(true);
+    try {
+      if (v) {
+        const result = await enablePush();
+        switch (result.status) {
+          case "registered":
+            setPushOn(true);
+            toast.success("Push notifications enabled");
+            break;
+          case "open-in-new-tab":
+            toast.info("Open EduCard in its own browser tab, then try again.");
+            break;
+          case "not-configured":
+            toast.error("Web push isn't set up yet. Update the Firebase connection with Include web push.");
+            break;
+          case "denied":
+            toast.error("Notifications are blocked. Allow them for EduCard in your browser's site settings.");
+            break;
+          case "unsupported":
+            toast.error("This browser doesn't support push notifications.");
+            break;
+          default:
+            toast.error("Couldn't enable push notifications. Please try again.");
+        }
+      } else {
+        await disablePush();
+        setPushOn(false);
+        toast.success("Push notifications turned off");
+      }
+    } finally {
+      setPushBusy(false);
     }
   };
 
@@ -79,11 +121,10 @@ function SettingsPage() {
           <ToggleRow
             icon={Bell}
             label="Push notifications"
-            description="Device alerts arrive in a future release"
-            value={false}
-            disabled
-            badge="Coming soon"
-            onChange={() => {}}
+            description="Get alerts about your transport application"
+            value={pushOn}
+            disabled={!ready || pushBusy}
+            onChange={(v) => void setPush(v)}
           />
           <ToggleRow
             icon={Wifi}
