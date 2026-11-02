@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { submitTransportApplication } from "@/lib/transport.functions";
 
 export const Route = createFileRoute("/transport")({
   component: () => (
@@ -82,34 +83,25 @@ function TransportInner() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user.id;
-    if (!userId) {
-      setSubmitting(false);
-      toast.error("Please sign in to apply.");
-      return;
-    }
-    const { data, error } = await supabase
-      .from("transport_applications")
-      .insert({
-        user_id: userId,
-        pickup_point: pickup,
-        dropoff_point: dropoff,
-        period,
-        reason: reason.trim() ? reason.trim() : null,
-      })
-      .select()
-      .single();
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message || "Could not submit your application. Please try again.");
+    try {
+      const { application } = await submitTransportApplication({
+        data: {
+          pickupPoint: pickup,
+          dropoffPoint: dropoff,
+          period: period as "1st Semester" | "2nd Semester" | "Full Year",
+          reason: reason.trim() ? reason.trim() : null,
+        },
+      });
+      setApplication(application as Application);
+      setShowForm(false);
+      setPickup(""); setDropoff(""); setReason(""); setPeriod("1st Semester");
+      toast.success("Application submitted");
+    } catch (err) {
+      toast.error((err as Error).message || "Could not submit your application. Please try again.");
       void load();
-      return;
+    } finally {
+      setSubmitting(false);
     }
-    setApplication(data as Application);
-    setShowForm(false);
-    setPickup(""); setDropoff(""); setReason(""); setPeriod("1st Semester");
-    toast.success("Application submitted");
   };
 
   const status = application ? statusStyle(application.status) : null;
