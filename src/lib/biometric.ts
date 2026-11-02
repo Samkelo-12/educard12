@@ -55,8 +55,12 @@ function randomChallenge(): Uint8Array {
 async function storeCredential(cred: StoredCredential) {
   if (biometricPlatform() === "native") {
     try {
-      const { NativeBiometric } = await import("@capacitor-community/native-biometric");
-      await NativeBiometric.setKey({ key: STORAGE_KEY, value: JSON.stringify(cred) });
+      const { NativeBiometric } = await import("capacitor-native-biometric");
+      await NativeBiometric.setCredentials({
+        server: STORAGE_KEY,
+        username: cred.credentialId,
+        password: cred.token,
+      });
       return;
     } catch {
       // fall through to localStorage if the secure store is unavailable
@@ -73,9 +77,12 @@ export async function getStoredCredential(): Promise<StoredCredential | null> {
   let raw: string | null = null;
   if (biometricPlatform() === "native") {
     try {
-      const { NativeBiometric } = await import("@capacitor-community/native-biometric");
-      const { value } = await NativeBiometric.getKey({ key: STORAGE_KEY });
-      raw = value ?? null;
+      const { NativeBiometric } = await import("capacitor-native-biometric");
+      const creds = await NativeBiometric.getCredentials({ server: STORAGE_KEY });
+      if (creds.username && creds.password) {
+        return { token: creds.password, credentialId: creds.username, label: "Mobile app" };
+      }
+      raw = null;
     } catch {
       raw = null;
     }
