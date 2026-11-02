@@ -55,7 +55,7 @@ function randomChallenge(): Uint8Array<ArrayBuffer> {
 async function storeCredential(cred: StoredCredential) {
   if (biometricPlatform() === "native") {
     try {
-      const { NativeBiometric } = await import("capacitor-native-biometric");
+      const { NativeBiometric } = await import("@capgo/capacitor-native-biometric");
       await NativeBiometric.setCredentials({
         server: STORAGE_KEY,
         username: cred.credentialId,
@@ -77,7 +77,7 @@ export async function getStoredCredential(): Promise<StoredCredential | null> {
   let raw: string | null = null;
   if (biometricPlatform() === "native") {
     try {
-      const { NativeBiometric } = await import("capacitor-native-biometric");
+      const { NativeBiometric } = await import("@capgo/capacitor-native-biometric");
       const creds = await NativeBiometric.getCredentials({ server: STORAGE_KEY });
       if (creds.username && creds.password) {
         return { token: creds.password, credentialId: creds.username, label: "Mobile app" };
@@ -108,7 +108,7 @@ export async function clearStoredCredential(credentialId?: string) {
   const stored = await getStoredCredential();
   if (biometricPlatform() === "native") {
     try {
-      const { NativeBiometric } = await import("capacitor-native-biometric");
+      const { NativeBiometric } = await import("@capgo/capacitor-native-biometric");
       await NativeBiometric.deleteCredentials({ server: STORAGE_KEY });
     } catch {
       /* ignore */
@@ -132,7 +132,7 @@ export async function clearStoredCredential(credentialId?: string) {
 export async function biometricAvailable(): Promise<boolean> {
   if (biometricPlatform() === "native") {
     try {
-      const { NativeBiometric } = await import("capacitor-native-biometric");
+      const { NativeBiometric } = await import("@capgo/capacitor-native-biometric");
       const { isAvailable } = await NativeBiometric.isAvailable({ useFallback: false });
       return isAvailable;
     } catch {
@@ -158,7 +158,7 @@ export async function enrollBiometric(
   fullName: string,
 ): Promise<void> {
   if (biometricPlatform() === "native") {
-    const { NativeBiometric } = await import("capacitor-native-biometric");
+    const { NativeBiometric } = await import("@capgo/capacitor-native-biometric");
     await NativeBiometric.verifyIdentity({
       reason: "Enable fingerprint or Face ID sign-in for EduCard",
     });
@@ -224,7 +224,7 @@ export async function biometricSignIn(): Promise<void> {
   if (!stored) throw new Error("Biometric sign-in is not set up on this device.");
 
   if (biometricPlatform() === "native") {
-    const { NativeBiometric } = await import("capacitor-native-biometric");
+    const { NativeBiometric } = await import("@capgo/capacitor-native-biometric");
     await NativeBiometric.verifyIdentity({
       reason: "Sign in to EduCard with your fingerprint or Face ID",
     });
