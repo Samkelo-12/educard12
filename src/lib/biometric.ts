@@ -39,14 +39,14 @@ function base64url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function uuidToBytes(uuid: string): Uint8Array {
+function uuidToBytes(uuid: string): Uint8Array<ArrayBuffer> {
   const hex = uuid.replace(/-/g, "");
   const out = new Uint8Array(16);
   for (let i = 0; i < 16; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
   return out;
 }
 
-function randomChallenge(): Uint8Array {
+function randomChallenge(): Uint8Array<ArrayBuffer> {
   const challenge = new Uint8Array(32);
   crypto.getRandomValues(challenge);
   return challenge;
@@ -158,7 +158,7 @@ export async function enrollBiometric(
   fullName: string,
 ): Promise<void> {
   if (biometricPlatform() === "native") {
-    const { NativeBiometric } = await import("@capacitor-community/native-biometric");
+    const { NativeBiometric } = await import("capacitor-native-biometric");
     await NativeBiometric.verifyIdentity({
       reason: "Enable fingerprint or Face ID sign-in for EduCard",
     });
@@ -224,7 +224,7 @@ export async function biometricSignIn(): Promise<void> {
   if (!stored) throw new Error("Biometric sign-in is not set up on this device.");
 
   if (biometricPlatform() === "native") {
-    const { NativeBiometric } = await import("@capacitor-community/native-biometric");
+    const { NativeBiometric } = await import("capacitor-native-biometric");
     await NativeBiometric.verifyIdentity({
       reason: "Sign in to EduCard with your fingerprint or Face ID",
     });
