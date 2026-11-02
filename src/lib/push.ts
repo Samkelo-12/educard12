@@ -63,10 +63,24 @@ export async function enablePush(): Promise<PushResult> {
 
     await registerPushToken({ data: { token, platform: "web" } });
     localStorage.setItem("educard-push-registered", "1");
+    localStorage.setItem("educard-push-token", token);
     return { status: "registered", token };
   } catch (err) {
     console.error("Push registration failed", err);
     return { status: "error" };
+  }
+}
+
+/** Turns push off for this device: removes the token from the server's send list. */
+export async function disablePush(): Promise<void> {
+  try {
+    const token = localStorage.getItem("educard-push-token");
+    if (token) {
+      await removePushToken({ data: { token } });
+      localStorage.removeItem("educard-push-token");
+    }
+  } finally {
+    localStorage.setItem("educard-push-registered", "0");
   }
 }
 
