@@ -141,7 +141,7 @@ export async function biometricAvailable(): Promise<boolean> {
   }
   if (typeof window === "undefined" || !("PublicKeyCredential" in window)) return false;
   try {
-    return await (window.PublicKeyCredential as PublicKeyCredential).isUserVerifyingPlatformAuthenticatorAvailable();
+    return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
   } catch {
     return false;
   }
@@ -175,7 +175,7 @@ export async function enrollBiometric(
   // Web: create a platform credential bound to this device.
   let credential: PublicKeyCredential | null;
   try {
-    credential = await navigator.credentials.create({
+    credential = (await navigator.credentials.create({
       publicKey: {
         challenge: randomChallenge(),
         rp: { name: "EduCard" },
@@ -196,7 +196,7 @@ export async function enrollBiometric(
         timeout: 60000,
         attestation: "none",
       },
-    });
+    }) as PublicKeyCredential | null;
   } catch (err) {
     throw new Error(describeError(err, "Biometric setup was cancelled."));
   }
@@ -231,14 +231,14 @@ export async function biometricSignIn(): Promise<void> {
   } else {
     let assertion: PublicKeyCredential | null;
     try {
-      assertion = await navigator.credentials.get({
+      assertion = (await navigator.credentials.get({
         publicKey: {
           challenge: randomChallenge(),
           rpId: window.location.hostname,
           userVerification: "required",
           timeout: 60000,
         },
-      });
+      }) as PublicKeyCredential | null;
     } catch (err) {
       throw new Error(describeError(err, "Biometric sign-in was cancelled."));
     }
