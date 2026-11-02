@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Bell, Moon, Globe, Wifi, Trash2 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { usePreferences } from "@/lib/preferences";
+import { enablePush, disablePush, pushRegistrationState } from "@/lib/push";
 
 export const Route = createFileRoute("/settings")({
   component: () => (
