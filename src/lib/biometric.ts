@@ -196,7 +196,7 @@ export async function enrollBiometric(
         timeout: 60000,
         attestation: "none",
       },
-    }) as PublicKeyCredential | null;
+    }) as PublicKeyCredential | null);
   } catch (err) {
     throw new Error(describeError(err, "Biometric setup was cancelled."));
   }
@@ -238,7 +238,7 @@ export async function biometricSignIn(): Promise<void> {
           userVerification: "required",
           timeout: 60000,
         },
-      }) as PublicKeyCredential | null;
+      }) as PublicKeyCredential | null);
     } catch (err) {
       throw new Error(describeError(err, "Biometric sign-in was cancelled."));
     }
