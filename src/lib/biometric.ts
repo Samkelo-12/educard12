@@ -108,8 +108,8 @@ export async function clearStoredCredential(credentialId?: string) {
   const stored = await getStoredCredential();
   if (biometricPlatform() === "native") {
     try {
-      const { NativeBiometric } = await import("@capacitor-community/native-biometric");
-      await NativeBiometric.removeKey({ key: STORAGE_KEY });
+      const { NativeBiometric } = await import("capacitor-native-biometric");
+      await NativeBiometric.deleteCredentials({ server: STORAGE_KEY });
     } catch {
       /* ignore */
     }
@@ -132,8 +132,8 @@ export async function clearStoredCredential(credentialId?: string) {
 export async function biometricAvailable(): Promise<boolean> {
   if (biometricPlatform() === "native") {
     try {
-      const { NativeBiometric } = await import("@capacitor-community/native-biometric");
-      const { isAvailable } = await NativeBiometric.isAvailable();
+      const { NativeBiometric } = await import("capacitor-native-biometric");
+      const { isAvailable } = await NativeBiometric.isAvailable({ useFallback: false });
       return isAvailable;
     } catch {
       return false;
