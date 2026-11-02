@@ -7,6 +7,3 @@ project(':capacitor-mlkit-barcode-scanning').projectDir = new File('../node_modu
 
 include ':capgo-capacitor-native-biometric'
 project(':capgo-capacitor-native-biometric').projectDir = new File('../node_modules/@capgo/capacitor-native-biometric/android')
-
-include ':capacitor-native-biometric'
-project(':capacitor-native-biometric').projectDir = new File('../node_modules/capacitor-native-biometric/android')
