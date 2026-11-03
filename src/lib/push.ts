@@ -45,6 +45,9 @@ export async function enablePush(): Promise<PushResult> {
       Object.fromEntries(Object.entries(firebaseConfig).filter(([, v]) => v !== undefined) as [string, string][]),
     ).toString();
     const serviceWorkerRegistration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${query}`);
+    // getToken fails with "no active Service Worker" unless the worker finished
+    // activating first.
+    await navigator.serviceWorker.ready;
 
     const app = getApps().find((a) => a.name === "educard-push") ?? initializeApp(firebaseConfig, "educard-push");
     const messaging = getMessaging(app);
