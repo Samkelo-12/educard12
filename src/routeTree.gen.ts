@@ -9,89 +9,29 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TransportRouteImport } from './routes/transport'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ScanRouteImport } from './routes/scan'
-import { Route as ReviewToolRouteImport } from './routes/review-tool'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as NotificationsRouteImport } from './routes/notifications'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ChangePasswordRouteImport } from './routes/change-password'
-import { Route as CardRouteImport } from './routes/card'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiPublicPendingApplicationsRouteImport } from './routes/api/public/pending-applications'
-import { Route as ApiPublicBiometricLoginRouteImport } from './routes/api/public/biometric-login'
-import { Route as ApiPublicApplicationHistoryRouteImport } from './routes/api/public/application-history'
+import { Route as CardRouteImport } from './routes/card'
+import { Route as ChangePasswordRouteImport } from './routes/change-password'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ReviewToolRouteImport } from './routes/review-tool'
+import { Route as ScanRouteImport } from './routes/scan'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as TransportRouteImport } from './routes/transport'
 import { Route as ApiPublicAdminReviewApplicationRouteImport } from './routes/api/public/admin-review-application'
+import { Route as ApiPublicApplicationHistoryRouteImport } from './routes/api/public/application-history'
+import { Route as ApiPublicBiometricLoginRouteImport } from './routes/api/public/biometric-login'
+import { Route as ApiPublicPendingApplicationsRouteImport } from './routes/api/public/pending-applications'
 
-const TransportRoute = TransportRouteImport.update({
-  id: '/transport',
-  path: '/transport',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ScanRoute = ScanRouteImport.update({
-  id: '/scan',
-  path: '/scan',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReviewToolRoute = ReviewToolRouteImport.update({
-  id: '/review-tool',
-  path: '/review-tool',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChangePasswordRoute = ChangePasswordRouteImport.update({
-  id: '/change-password',
-  path: '/change-password',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CardRoute = CardRouteImport.update({
@@ -99,15 +39,81 @@ const CardRoute = CardRouteImport.update({
   path: '/card',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ChangePasswordRoute = ChangePasswordRouteImport.update({
+  id: '/change-password',
+  path: '/change-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPendingApplicationsRoute =
-  ApiPublicPendingApplicationsRouteImport.update({
-    id: '/api/public/pending-applications',
-    path: '/api/public/pending-applications',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewToolRoute = ReviewToolRouteImport.update({
+  id: '/review-tool',
+  path: '/review-tool',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScanRoute = ScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransportRoute = TransportRouteImport.update({
+  id: '/transport',
+  path: '/transport',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAdminReviewApplicationRoute =
+  ApiPublicAdminReviewApplicationRouteImport.update({
+    id: '/api/public/admin-review-application',
+    path: '/api/public/admin-review-application',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicApplicationHistoryRoute =
+  ApiPublicApplicationHistoryRouteImport.update({
+    id: '/api/public/application-history',
+    path: '/api/public/application-history',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicBiometricLoginRoute = ApiPublicBiometricLoginRouteImport.update({
@@ -115,16 +121,10 @@ const ApiPublicBiometricLoginRoute = ApiPublicBiometricLoginRouteImport.update({
   path: '/api/public/biometric-login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicApplicationHistoryRoute =
-  ApiPublicApplicationHistoryRouteImport.update({
-    id: '/api/public/application-history',
-    path: '/api/public/application-history',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicAdminReviewApplicationRoute =
-  ApiPublicAdminReviewApplicationRouteImport.update({
-    id: '/api/public/admin-review-application',
-    path: '/api/public/admin-review-application',
+const ApiPublicPendingApplicationsRoute =
+  ApiPublicPendingApplicationsRouteImport.update({
+    id: '/api/public/pending-applications',
+    path: '/api/public/pending-applications',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -282,95 +282,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/transport': {
-      id: '/transport'
-      path: '/transport'
-      fullPath: '/transport'
-      preLoaderRoute: typeof TransportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/scan': {
-      id: '/scan'
-      path: '/scan'
-      fullPath: '/scan'
-      preLoaderRoute: typeof ScanRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/review-tool': {
-      id: '/review-tool'
-      path: '/review-tool'
-      fullPath: '/review-tool'
-      preLoaderRoute: typeof ReviewToolRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/change-password': {
-      id: '/change-password'
-      path: '/change-password'
-      fullPath: '/change-password'
-      preLoaderRoute: typeof ChangePasswordRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/card': {
@@ -380,25 +296,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/change-password': {
+      id: '/change-password'
+      path: '/change-password'
+      fullPath: '/change-password'
+      preLoaderRoute: typeof ChangePasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/pending-applications': {
-      id: '/api/public/pending-applications'
-      path: '/api/public/pending-applications'
-      fullPath: '/api/public/pending-applications'
-      preLoaderRoute: typeof ApiPublicPendingApplicationsRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/biometric-login': {
-      id: '/api/public/biometric-login'
-      path: '/api/public/biometric-login'
-      fullPath: '/api/public/biometric-login'
-      preLoaderRoute: typeof ApiPublicBiometricLoginRouteImport
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review-tool': {
+      id: '/review-tool'
+      path: '/review-tool'
+      fullPath: '/review-tool'
+      preLoaderRoute: typeof ReviewToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scan': {
+      id: '/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof ScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transport': {
+      id: '/transport'
+      path: '/transport'
+      fullPath: '/transport'
+      preLoaderRoute: typeof TransportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin-review-application': {
+      id: '/api/public/admin-review-application'
+      path: '/api/public/admin-review-application'
+      fullPath: '/api/public/admin-review-application'
+      preLoaderRoute: typeof ApiPublicAdminReviewApplicationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/application-history': {
@@ -408,11 +401,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicApplicationHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/admin-review-application': {
-      id: '/api/public/admin-review-application'
-      path: '/api/public/admin-review-application'
-      fullPath: '/api/public/admin-review-application'
-      preLoaderRoute: typeof ApiPublicAdminReviewApplicationRouteImport
+    '/api/public/biometric-login': {
+      id: '/api/public/biometric-login'
+      path: '/api/public/biometric-login'
+      fullPath: '/api/public/biometric-login'
+      preLoaderRoute: typeof ApiPublicBiometricLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pending-applications': {
+      id: '/api/public/pending-applications'
+      path: '/api/public/pending-applications'
+      fullPath: '/api/public/pending-applications'
+      preLoaderRoute: typeof ApiPublicPendingApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
