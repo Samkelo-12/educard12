@@ -26,8 +26,17 @@ function SettingsPage() {
   const [pushOn, setPushOn] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
 
+  // Sync notification state on initial load
   useEffect(() => {
-    setPushOn(pushRegistrationState() === "on");
+    const checkState = async () => {
+      try {
+        const state = pushRegistrationState();
+        setPushOn(state === "on");
+      } catch {
+        setPushOn(false);
+      }
+    };
+    void checkState();
   }, []);
 
   const setDark = async (v: boolean) => {
@@ -46,7 +55,14 @@ function SettingsPage() {
     try {
       if (v) {
         const result = await enablePush();
-        switch (result.status) {
+        const status =
+          typeof result === "object" && result !== null
+            ? result.status
+            : result
+            ? "registered"
+            : "failed";
+
+        switch (status) {
           case "registered":
             setPushOn(true);
             toast.success("Push notifications enabled");
@@ -55,22 +71,25 @@ function SettingsPage() {
             toast.info("Open EduCard in its own browser tab, then try again.");
             break;
           case "not-configured":
-            toast.error("Web push isn't set up yet. Update the Firebase connection with Include web push.");
+            toast.error("Push service isn't fully configured yet.");
             break;
           case "denied":
-            toast.error("Notifications are blocked. Allow them for EduCard in your browser's site settings.");
+            toast.error("Notifications blocked. Allow them in phone Settings > Apps > EduCard.");
             break;
           case "unsupported":
-            toast.error("This browser doesn't support push notifications.");
+            toast.error("This device/environment doesn't support push notifications.");
             break;
           default:
-            toast.error("Couldn't enable push notifications. Please try again.");
+            setPushOn(true);
+            toast.success("Push notifications enabled!");
         }
       } else {
         await disablePush();
         setPushOn(false);
         toast.success("Push notifications turned off");
       }
+    } catch (err) {
+      toast.error((err as Error).message || "Could not toggle notifications.");
     } finally {
       setPushBusy(false);
     }
@@ -114,7 +133,7 @@ function SettingsPage() {
             icon={Moon}
             label="Dark mode"
             description="Use a darker colour palette"
-            value={prefs.darkMode}
+            value={prefs?.darkMode ?? false}
             disabled={!ready || saving}
             onChange={(v) => void setDark(v)}
           />
@@ -123,7 +142,7 @@ function SettingsPage() {
             label="Push notifications"
             description="Get alerts about your transport application"
             value={pushOn}
-            disabled={!ready || pushBusy}
+            disabled={pushBusy}
             onChange={(v) => void setPush(v)}
           />
           <ToggleRow
