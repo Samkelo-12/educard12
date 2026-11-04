@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "502053786079",
+    "project_id": "educard-12",
+    "storage_bucket": "educard-12.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502053786079:web:577ed2b9b3cf83ea19f46a",
+        "android_client_info": {
+          "package_name": "com.wsu.educard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdvFalWN6bPnU4JDK_sMjAOPx3w5TXPcA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
