@@ -21,6 +21,7 @@ import { usePreferences, resetPreferencesCache } from "@/lib/preferences";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { signOut } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
+import { checkBiometricSupport, authenticateWithBiometrics } from "@/lib/biometrics"
 
 export const Route = createFileRoute("/privacy")({
   component: () => (
@@ -33,6 +34,43 @@ export const Route = createFileRoute("/privacy")({
 });
 
 function PrivacyPage() {
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+
+  useEffect(() => {
+    // Check hardware availability
+    checkBiometricSupport().then((supported) => {
+      setIsBiometricSupported(supported);
+    });
+
+    // Retrieve stored preference
+    const saved = localStorage.getItem("biometric_enabled") === "true";
+    setBiometricEnabled(saved);
+  }, []);
+
+  const handleBiometricToggle = async (checked: boolean) => {
+    if (checked) {
+      if (!isBiometricSupported) {
+        toast.error("Biometrics are not available on this device");
+        return;
+      }
+
+      // Verify identity before enabling
+      const success = await authenticateWithBiometrics();
+      if (success) {
+        setBiometricEnabled(true);
+        localStorage.setItem("biometric_enabled", "true");
+        toast.success("Biometric unlock enabled!");
+      } else {
+        setBiometricEnabled(false);
+        toast.error("Biometric verification cancelled or failed");
+      }
+    } else {
+      setBiometricEnabled(false);
+      localStorage.setItem("biometric_enabled", "false");
+      toast.info("Biometric unlock disabled");
+    }
+  };
   const { prefs, ready, update } = usePreferences();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
@@ -97,13 +135,17 @@ function PrivacyPage() {
       <div className="-mt-10 px-5 space-y-5">
         <section className="rounded-2xl bg-card shadow-soft divide-y divide-border">
           <ToggleRow
-            icon={Fingerprint}
-            label="Biometric unlock"
-            description="Available in a future release"
-            value={false}
-            disabled
-            badge="Coming soon"
-            onChange={() => {}}
+           icon={Fingerprint}
+  label="Biometric unlock"
+  description={
+    isBiometricSupported
+      ? "Secure your app with fingerprint or face ID"
+      : "Checking device support..."
+  }
+  value={biometricEnabled}
+  disabled={!isBiometricSupported}
+  badge={undefined}
+  onChange={handleBiometricToggle}
           />
           <ToggleRow
             icon={Eye}
