@@ -140,9 +140,9 @@ function SettingsPage() {
           <ToggleRow
             icon={Bell}
             label="Push notifications"
-            description="Get alerts about your transport application"
+            description="Get quick updates directly on your phone"
             value={pushOn}
-            disabled={pushBusy}
+            disabled={false}
             onChange={(v) => void setPush(v)}
           />
           <ToggleRow
