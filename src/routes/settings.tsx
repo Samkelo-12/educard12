@@ -79,6 +79,9 @@ function SettingsPage() {
           case "unsupported":
             toast.error("This device/environment doesn't support push notifications.");
             break;
+          case "error":
+            toast.error("Push registration failed on this device. Please try again.");
+            break;
           default:
             setPushOn(true);
             toast.success("Push notifications enabled!");
