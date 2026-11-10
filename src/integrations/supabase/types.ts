@@ -182,6 +182,29 @@ export type Database = {
         }
         Relationships: []
       }
+      transport_expiry_notifications: {
+        Row: {
+          application_id: string
+          created_at: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transport_expiry_notifications_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "transport_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_preferences: {
         Row: {
           analytics_opt_in: boolean
@@ -235,7 +258,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      record_expired_transport_notifications: {
+        Args: never
+        Returns: {
+          application_id: string
+          user_id: string
+          valid_until: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "card_staff" | "transport_staff" | "student"
