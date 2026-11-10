@@ -23,6 +23,7 @@ import { Route as ReviewToolRouteImport } from './routes/review-tool'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as TimetableRouteImport } from './routes/timetable'
 import { Route as TransportRouteImport } from './routes/transport'
 import { Route as ApiPublicAdminReviewApplicationRouteImport } from './routes/api/public/admin-review-application'
 import { Route as ApiPublicApplicationHistoryRouteImport } from './routes/api/public/application-history'
@@ -99,6 +100,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TimetableRoute = TimetableRouteImport.update({
+  id: '/timetable',
+  path: '/timetable',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransportRoute = TransportRouteImport.update({
   id: '/transport',
   path: '/transport',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/timetable': typeof TimetableRoute
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
   '/api/public/application-history': typeof ApiPublicApplicationHistoryRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/timetable': typeof TimetableRoute
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
   '/api/public/application-history': typeof ApiPublicApplicationHistoryRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/timetable': typeof TimetableRoute
   '/transport': typeof TransportRoute
   '/api/public/admin-review-application': typeof ApiPublicAdminReviewApplicationRoute
   '/api/public/application-history': typeof ApiPublicApplicationHistoryRoute
@@ -209,6 +218,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/signup'
+    | '/timetable'
     | '/transport'
     | '/api/public/admin-review-application'
     | '/api/public/application-history'
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/signup'
+    | '/timetable'
     | '/transport'
     | '/api/public/admin-review-application'
     | '/api/public/application-history'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/signup'
+    | '/timetable'
     | '/transport'
     | '/api/public/admin-review-application'
     | '/api/public/application-history'
@@ -273,6 +285,7 @@ export interface RootRouteChildren {
   ScanRoute: typeof ScanRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  TimetableRoute: typeof TimetableRoute
   TransportRoute: typeof TransportRoute
   ApiPublicAdminReviewApplicationRoute: typeof ApiPublicAdminReviewApplicationRoute
   ApiPublicApplicationHistoryRoute: typeof ApiPublicApplicationHistoryRoute
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/timetable': {
+      id: '/timetable'
+      path: '/timetable'
+      fullPath: '/timetable'
+      preLoaderRoute: typeof TimetableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transport': {
       id: '/transport'
       path: '/transport'
@@ -433,6 +453,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScanRoute: ScanRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  TimetableRoute: TimetableRoute,
   TransportRoute: TransportRoute,
   ApiPublicAdminReviewApplicationRoute: ApiPublicAdminReviewApplicationRoute,
   ApiPublicApplicationHistoryRoute: ApiPublicApplicationHistoryRoute,

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Bell, CreditCard, ScanLine, Bus, Eye } from "lucide-react";
+import { Bell, CreditCard, ScanLine, Bus, Eye, Calendar } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-store";
@@ -74,7 +74,6 @@ function Dashboard() {
             <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-destructive" />
           )}
         </Link>
-
       </header>
 
       {prefs.hideCard && !revealed ? (
@@ -101,10 +100,11 @@ function Dashboard() {
 
       <section>
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Quick actions</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           <Quick to="/card" icon={CreditCard} label="ID Card" />
           <Quick to="/scan" icon={ScanLine} label="Scan" />
           <Quick to="/transport" icon={Bus} label="Transport" />
+          <Quick to="/timetable" icon={Calendar} label="Schedule" />
         </div>
       </section>
     </div>
@@ -121,4 +121,3 @@ function Quick({ to, icon: Icon, label }: { to: string; icon: typeof Bell; label
     </Link>
   );
 }
-

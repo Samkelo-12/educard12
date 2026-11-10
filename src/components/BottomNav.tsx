@@ -1,8 +1,8 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, CreditCard, ScanLine, Bus, User } from "lucide-react";
+import { Home, CreditCard, Bus, User, Calendar } from "lucide-react";
 
 type NavItem = {
-  to: "/dashboard" | "/card" | "/scan" | "/transport" | "/profile";
+  to: "/dashboard" | "/card" | "/transport" | "/profile" | "/timetable";
   label: string;
   icon: typeof Home;
   primary?: boolean;
@@ -11,7 +11,7 @@ type NavItem = {
 const items: NavItem[] = [
   { to: "/dashboard", label: "Home", icon: Home },
   { to: "/card", label: "Card", icon: CreditCard },
-  { to: "/scan", label: "Scan", icon: ScanLine, primary: true },
+  { to: "/timetable", label: "Schedule", icon: Calendar, primary: true },
   { to: "/transport", label: "Transport", icon: Bus },
   { to: "/profile", label: "Profile", icon: User },
 ];
