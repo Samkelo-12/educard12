@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { GraduationCap, ShieldCheck, Camera, Bus } from "lucide-react";
+import { GraduationCap, ShieldCheck, Camera, Bus, Sparkles, Radio, CheckCircle2 } from "lucide-react";
 import type { StudentProfile } from "@/lib/auth-store";
 import { updateProfile } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Deterministic barcode (Code128-style stripes) — decorative
 function Barcode({ value, width = 220, height = 60 }: { value: string; width?: number; height?: number }) {
@@ -35,6 +36,9 @@ function Barcode({ value, width = 220, height = 60 }: { value: string; width?: n
 export function CardPreview({ profile, compact, editablePhoto }: { profile: StudentProfile; compact?: boolean; editablePhoto?: boolean }) {
   const [flipped, setFlipped] = useState(false);
   const [showSticker, setShowSticker] = useState(false);
+  const [isScanningNFC, setIsScanningNFC] = useState(false);
+  const [accessGranted, setAccessGranted] = useState(false);
+
   const initials = profile.fullName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   useEffect(() => {
@@ -66,6 +70,27 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
     const reader = new FileReader();
     reader.onload = () => { void updateProfile({ photo: reader.result as string }); };
     reader.readAsDataURL(file);
+  };
+
+  const handleTransportCheckIn = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevents card from un-flipping when clicking the button
+
+    if (!showSticker) {
+      toast.error("Access Denied: No active or approved transport application sticker found.");
+      return;
+    }
+
+    setIsScanningNFC(true);
+    setAccessGranted(false);
+
+    // Simulate NFC bus validator connection
+    setTimeout(() => {
+      setIsScanningNFC(false);
+      setAccessGranted(true);
+      toast.success("Bus Access Granted! NFC Verified.");
+
+      setTimeout(() => setAccessGranted(false), 4000);
+    }, 2200);
   };
 
   const minH = compact ? "min-h-[210px]" : "min-h-[440px]";
@@ -147,40 +172,86 @@ export function CardPreview({ profile, compact, editablePhoto }: { profile: Stud
 
 
         {/* BACK */}
-        <div className={`absolute inset-0 rotate-y-180 backface-hidden overflow-hidden rounded-3xl bg-gradient-card text-primary-foreground shadow-card ${compact ? "p-5" : "p-6"} flex flex-col`}>
-          <div className="absolute top-0 left-0 right-0 h-1 bg-white" />
+        <div className={`absolute inset-0 rotate-y-180 backface-hidden overflow-hidden rounded-3xl bg-gradient-card text-primary-foreground shadow-card ${compact ? "p-4" : "p-6"} flex flex-col justify-between`}>
+          <div>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-white" />
 
-          {/* Magstripe */}
-          <div className="-mx-6 mt-2 h-8 bg-black/80" />
+            {/* Magstripe */}
+            <div className="-mx-6 mt-2 h-8 bg-black/80" />
 
-          <div className="mt-5 flex items-center justify-between">
-            <p className="text-[9px] uppercase tracking-[0.1em] font-semibold leading-tight">Walter Sisulu<br />University</p>
-            <span className="text-[9px] uppercase tracking-widest text-white/50">Back</span>
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-[9px] uppercase tracking-[0.1em] font-semibold leading-tight">Walter Sisulu<br />University</p>
+              <span className="text-[9px] uppercase tracking-widest text-white/50">Back</span>
+            </div>
           </div>
 
-          {/* Transport sticker */}
-          {showSticker && (
-            <div className="mt-5 flex justify-center">
-              <div className="relative w-44 h-44 rounded-full bg-white text-black flex flex-col items-center justify-center shadow-glow ring-4 ring-white/30">
-                <div className="absolute inset-2 rounded-full border-2 border-dashed border-black/40" />
-                <Bus className="h-10 w-10" strokeWidth={2.2} />
-                <p className="mt-1 text-[10px] uppercase tracking-[0.18em] font-bold">Transport</p>
-                <p className="text-[9px] font-mono tracking-wider">VALID 2026</p>
-                <p className="mt-0.5 text-[8px] uppercase tracking-widest text-black/60">Zone A · B · C</p>
+          {/* Transport sticker & NFC Check-In Area */}
+          <div className="relative flex flex-col items-center justify-center my-auto">
+            {showSticker ? (
+              <div className="relative w-36 h-36 rounded-full bg-white text-black flex flex-col items-center justify-center shadow-glow ring-4 ring-white/30 text-center p-2">
+                {/* Clearly Visible NFC Radar Waves radiating directly from the sticker */}
+                {isScanningNFC && (
+                  <>
+                    <span className="absolute inset-0 rounded-full border-4 border-emerald-400 animate-ping opacity-80 pointer-events-none" />
+                    <span className="absolute -inset-4 rounded-full border-2 border-emerald-300 animate-pulse opacity-90 pointer-events-none" />
+                    <span className="absolute -inset-8 rounded-full border border-emerald-400/60 animate-ping opacity-60 pointer-events-none" />
+                  </>
+                )}
+
+                <div className="absolute inset-1.5 rounded-full border-2 border-dashed border-black/40" />
+                <Bus className="h-8 w-8" strokeWidth={2.2} />
+                <p className="mt-0.5 text-[9px] uppercase tracking-[0.15em] font-bold">Transport</p>
+                <p className="text-[8px] font-mono tracking-wider">VALID 2026</p>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="text-center text-white/60 text-xs px-4 py-2 bg-white/5 rounded-2xl border border-white/10">
+                <p className="font-semibold">No Active Bus Pass</p>
+                <p className="text-[10px] text-white/40 mt-0.5">Apply in Transport tab</p>
+              </div>
+            )}
+          </div>
 
-          {!compact && (
-            <div className="mt-auto pt-4 border-t border-white/10">
-              <p className="text-[9px] text-white/60 leading-relaxed">
-                This card remains the property of Walter Sisulu University. If found, please return to the nearest campus office. Tampering invalidates the transport sticker.
-              </p>
-              <p className="mt-2 text-[9px] text-white/50 font-mono">SN {profile.studentNumber}</p>
-            </div>
-          )}
+          {/* Check-In Action Button */}
+          <div className="space-y-3">
+            {accessGranted ? (
+              <div className="w-full py-2.5 rounded-xl bg-emerald-500 text-black text-xs font-bold flex items-center justify-center gap-1.5 animate-in zoom-in-95 duration-200">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Bus Access Granted</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleTransportCheckIn}
+                disabled={isScanningNFC}
+                className={`w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm ${
+                  showSticker
+                    ? "bg-white text-black hover:bg-neutral-200 active:scale-95"
+                    : "bg-white/10 text-white/40 cursor-not-allowed border border-white/5"
+                }`}
+              >
+                {isScanningNFC ? (
+                  <>
+                    <Radio className="h-4 w-4 animate-pulse text-emerald-400" />
+                    <span>Emitting NFC Signal…</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    <span>Check In Transport</span>
+                  </>
+                )}
+              </button>
+            )}
 
-          <p className="mt-3 text-[11px] text-white/60 text-center">← Tap to flip back</p>
+            {!compact && (
+              <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[9px] text-white/60">
+                <span>WSU Campus Security</span>
+                <span className="font-mono">SN {profile.studentNumber}</span>
+              </div>
+            )}
+
+            <p className="text-[10px] text-white/60 text-center">← Tap to flip back</p>
+          </div>
         </div>
       </button>
     </div>
