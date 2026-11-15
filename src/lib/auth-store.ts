@@ -92,9 +92,11 @@ export async function signUp(input: SignUpInput) {
 }
 
 export async function signIn(email: string, password: string) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error("Invalid email or password.");
-  notifyAuth();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.user) throw new Error("Invalid email or password.");
+
+  // Pass data.user.id directly so we skip the extra getSession() round-trip
+  await loadProfile(true, data.user.id);
 }
 
 export async function signOut() {
@@ -118,26 +120,29 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
-async function fetchProfile(): Promise<StudentProfile | null> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const user = sessionData.session?.user;
-  if (!user) return null;
+async function fetchProfile(userId?: string): Promise<StudentProfile | null> {
+  let uid = userId;
+  if (!uid) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    uid = sessionData.session?.user?.id;
+  }
+  if (!uid) return null;
 
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user.id)
+    .eq("id", uid)
     .maybeSingle();
 
   if (error || !data) return null;
   return toProfile(data as ProfileRow);
 }
 
-async function loadProfile(force = false): Promise<StudentProfile | null> {
+async function loadProfile(force = false, userId?: string): Promise<StudentProfile | null> {
   if (!force && cacheLoaded) return cachedProfile;
   if (!force && inflight) return inflight;
 
-  inflight = fetchProfile()
+  inflight = fetchProfile(userId)
     .then((p) => {
       cachedProfile = p;
       cacheLoaded = true;

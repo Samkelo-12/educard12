@@ -84,17 +84,35 @@ function TransportInner() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { application } = await submitTransportApplication({
-        data: {
-          pickupPoint: pickup,
-          dropoffPoint: dropoff,
+      // 1. Get the current authenticated user directly from the client session
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error("You must be logged in to submit an application.");
+      }
+
+      // 2. Insert directly using the Supabase client SDK (bypasses server function origin issues on mobile)
+      const { data: row, error } = await supabase
+        .from("transport_applications")
+        .insert({
+          user_id: user.id,
+          pickup_point: pickup.trim(),
+          dropoff_point: dropoff.trim(),
           period: period as "1st Semester" | "2nd Semester" | "Full Year",
           reason: reason.trim() ? reason.trim() : null,
-        },
-      });
-      setApplication(application as Application);
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message || "Could not submit your application.");
+      }
+
+      setApplication(row as Application);
       setShowForm(false);
-      setPickup(""); setDropoff(""); setReason(""); setPeriod("1st Semester");
+      setPickup(""); 
+      setDropoff(""); 
+      setReason(""); 
+      setPeriod("1st Semester");
       toast.success("Application submitted");
     } catch (err) {
       toast.error((err as Error).message || "Could not submit your application. Please try again.");

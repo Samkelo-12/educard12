@@ -34,13 +34,13 @@ function Login() {
     });
   }, []);
 
-  // Standard Email/Password Login
-  const handle = async (e: React.FormEvent) => {
+ // Standard Email/Password Login
+const handle = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsAuthenticating(true);
     try {
       await signIn(email, password);
       
-      // Cache credentials securely for subsequent biometric logins
       localStorage.setItem("saved_email", email);
       localStorage.setItem("saved_password", password);
 
@@ -48,6 +48,8 @@ function Login() {
       navigate({ to: "/dashboard" });
     } catch (err) {
       toast.error((err as Error).message);
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
@@ -172,8 +174,8 @@ function Login() {
           </div>
 
           <Button type="submit" className="w-full h-11 bg-gradient-primary shadow-soft" disabled={isAuthenticating}>
-            Sign in
-          </Button>
+  {isAuthenticating ? "Signing in..." : "Sign in"}
+</Button>
 
           {/* Divider & Biometric Login Button */}
           {(hasBiometric || isBiometricSupported) && (
