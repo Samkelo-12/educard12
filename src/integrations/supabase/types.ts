@@ -143,41 +143,116 @@ export type Database = {
         }
         Relationships: []
       }
-      transport_applications: {
+transport_applications: {
         Row: {
-          created_at: string
-          dropoff_point: string
           id: string
-          period: string
-          pickup_point: string
-          reason: string | null
-          reviewed_at: string | null
-          status: string
           user_id: string
+          transport_site: string
+          title: string
+          surname: string
+          first_names: string
+          student_number: string
+          date_of_application: string
+          date_of_birth: string
+          citizenship: string
+          cell_no: string
+          email_address: string
+          postal_address: string
+          residence_name: string
+          guardian_title: string
+          guardian_surname: string
+          guardian_first_names: string
+          guardian_tel_home: string | null
+          guardian_tel_work: string | null
+          guardian_tel_cell: string
+          guardian_postal_address: string
+          guardian_email_address: string | null
+          proposed_course_of_study: string
+          special_treatment: boolean
+          physical_disabilities_particulars: string | null
+          form_of_payment: string
+          id_document_url: string | null
+          proof_of_registration_url: string | null
+          declaration_accepted: boolean
+          signature_name: string
+          signature_date: string
+          status: string
+          created_at: string
+          reviewed_at: string | null
           valid_until: string | null
         }
         Insert: {
-          created_at?: string
-          dropoff_point: string
           id?: string
-          period: string
-          pickup_point: string
-          reason?: string | null
-          reviewed_at?: string | null
-          status?: string
           user_id: string
+          transport_site: string
+          title: string
+          surname: string
+          first_names: string
+          student_number: string
+          date_of_application?: string
+          date_of_birth: string
+          citizenship: string
+          cell_no: string
+          email_address: string
+          postal_address: string
+          residence_name: string
+          guardian_title: string
+          guardian_surname: string
+          guardian_first_names: string
+          guardian_tel_home?: string | null
+          guardian_tel_work?: string | null
+          guardian_tel_cell: string
+          guardian_postal_address: string
+          guardian_email_address?: string | null
+          proposed_course_of_study: string
+          special_treatment?: boolean
+          physical_disabilities_particulars?: string | null
+          form_of_payment: string
+          id_document_url?: string | null
+          proof_of_registration_url?: string | null
+          declaration_accepted?: boolean
+          signature_name: string
+          signature_date?: string
+          status?: string
+          created_at?: string
+          reviewed_at?: string | null
           valid_until?: string | null
         }
         Update: {
-          created_at?: string
-          dropoff_point?: string
           id?: string
-          period?: string
-          pickup_point?: string
-          reason?: string | null
-          reviewed_at?: string | null
-          status?: string
           user_id?: string
+          transport_site?: string
+          title?: string
+          surname?: string
+          first_names?: string
+          student_number?: string
+          date_of_application?: string
+          date_of_birth?: string
+          citizenship?: string
+          cell_no?: string
+          email_address?: string
+          postal_address?: string
+          residence_name?: string
+          guardian_title?: string
+          guardian_surname?: string
+          guardian_first_names?: string
+          guardian_tel_home?: string | null
+          guardian_tel_work?: string | null
+          guardian_tel_cell?: string
+          guardian_postal_address?: string
+          guardian_email_address?: string | null
+          proposed_course_of_study?: string
+          special_treatment?: boolean
+          physical_disabilities_particulars?: string | null
+          form_of_payment?: string
+          id_document_url?: string
+          proof_of_registration_url?: string
+          declaration_accepted?: boolean
+          signature_name?: string
+          signature_date?: string
+          status?: string
+          created_at?: string
+          reviewed_at?: string | null
           valid_until?: string | null
         }
         Relationships: []

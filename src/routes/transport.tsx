@@ -1,15 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Bus, MapPin, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, Bus, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { submitTransportApplication } from "@/lib/transport.functions";
 
 export const Route = createFileRoute("/transport")({
   component: () => (
@@ -21,17 +26,88 @@ export const Route = createFileRoute("/transport")({
   ),
 });
 
+type TransportSite = "Potsdam site" | "Chiselhurst site";
+type PaymentForm = "NSFAS / Bursary" | "Upfront Payment";
+
 type Application = {
   id: string;
-  pickup_point: string;
-  dropoff_point: string;
-  period: string;
-  reason: string | null;
+  transport_site: TransportSite;
+  surname: string;
+  first_names: string;
+  title: string;
+  student_number: string;
+  date_of_application: string;
+  date_of_birth: string;
+  citizenship: string;
+  cell_no: string;
+  email_address: string;
+  postal_address: string;
+  residence_name: string;
+  guardian_surname: string;
+  guardian_first_names: string;
+  guardian_title: string;
+  guardian_tel_home: string | null;
+  guardian_tel_work: string | null;
+  guardian_tel_cell: string;
+  guardian_postal_address: string;
+  guardian_email_address: string | null;
+  proposed_course_of_study: string;
+  special_treatment: boolean;
+  physical_disabilities_particulars: string | null;
+  form_of_payment: PaymentForm;
+  id_document_url: string;
+  proof_of_registration_url: string;
+  declaration_accepted: boolean;
+  signature_name: string;
+  signature_date: string;
   status: string;
   created_at: string;
   reviewed_at: string | null;
   valid_until: string | null;
 };
+
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
+const todayISO = new Date().toISOString().split("T")[0];
+
+function validateDocumentFile(file: File, label: string) {
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    throw new Error(`${label} must be a PDF, JPG, PNG, or WEBP file.`);
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    throw new Error(`${label} must be 5 MB or smaller.`);
+  }
+}
+
+async function uploadTransportDocument(
+  userId: string,
+  file: File,
+  docType: "id" | "proof_of_registration"
+): Promise<string> {
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const filePath = `${userId}/${docType}_${Date.now()}_${safeName}`;
+
+  const { error } = await supabase.storage
+    .from("transport-documents")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(
+      `Failed to upload ${docType.replace("_", " ")}: ${error.message}`
+    );
+  }
+
+  return filePath;
+}
 
 function isExpired(validUntil: string | null) {
   if (!validUntil) return false;
@@ -45,16 +121,30 @@ function canReapply(app: Application | null) {
   return false;
 }
 
-export default function Transport() { return <TransportInner />; }
+export default function Transport() {
+  return <TransportInner />;
+}
 
 function statusStyle(status: string) {
   switch (status) {
     case "approved":
-      return { icon: CheckCircle2, tone: "bg-success/15 text-success", label: "Approved" };
+      return {
+        icon: CheckCircle2,
+        tone: "bg-success/15 text-success",
+        label: "Approved",
+      };
     case "rejected":
-      return { icon: XCircle, tone: "bg-destructive/15 text-destructive", label: "Rejected" };
+      return {
+        icon: XCircle,
+        tone: "bg-destructive/15 text-destructive",
+        label: "Rejected",
+      };
     default:
-      return { icon: Clock, tone: "bg-muted text-muted-foreground", label: "Pending review" };
+      return {
+        icon: Clock,
+        tone: "bg-muted text-muted-foreground",
+        label: "Pending review",
+      };
   }
 }
 
@@ -63,42 +153,183 @@ function TransportInner() {
   const [submitting, setSubmitting] = useState(false);
   const [application, setApplication] = useState<Application | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [pickup, setPickup] = useState("");
-  const [dropoff, setDropoff] = useState("");
-  const [period, setPeriod] = useState("1st Semester");
-  const [reason, setReason] = useState("");
+
+  // Site & Applicant particulars
+  const [transportSite, setTransportSite] = useState<TransportSite>("Chiselhurst site");
+  const [title, setTitle] = useState("Mr");
+  const [surname, setSurname] = useState("");
+  const [firstNames, setFirstNames] = useState("");
+  const [studentNumber, setStudentNumber] = useState("");
+  const [dateOfApplication, setDateOfApplication] = useState(todayISO);
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [citizenship, setCitizenship] = useState("South African");
+  const [cellNo, setCellNo] = useState("");
+  const [emailAddress, setEmailAddress] = useState("");
+  const [postalAddress, setPostalAddress] = useState("");
+  const [residenceName, setResidenceName] = useState("");
+
+  // Guardian / Parent particulars
+  const [guardianTitle, setGuardianTitle] = useState("Mr");
+  const [guardianSurname, setGuardianSurname] = useState("");
+  const [guardianFirstNames, setGuardianFirstNames] = useState("");
+  const [guardianTelHome, setGuardianTelHome] = useState("");
+  const [guardianTelWork, setGuardianTelWork] = useState("");
+  const [guardianTelCell, setGuardianTelCell] = useState("");
+  const [guardianPostalAddress, setGuardianPostalAddress] = useState("");
+  const [guardianEmailAddress, setGuardianEmailAddress] = useState("");
+
+  // Academic information
+  const [proposedCourseOfStudy, setProposedCourseOfStudy] = useState("");
+
+  // Special treatment, disability details & payment
+  const [specialTreatment, setSpecialTreatment] = useState<"NO" | "YES">("NO");
+  const [disabilitiesParticulars, setDisabilitiesParticulars] = useState("");
+  const [formOfPayment, setFormOfPayment] = useState<PaymentForm>("NSFAS / Bursary");
+
+  // Supporting documents & declaration
+  const [idFile, setIdFile] = useState<File | null>(null);
+  const [proofOfRegFile, setProofOfRegFile] = useState<File | null>(null);
+  const idInputRef = useRef<HTMLInputElement | null>(null);
+  const proofInputRef = useRef<HTMLInputElement | null>(null);
+  const [declarationAccepted, setDeclarationAccepted] = useState(false);
+  const [signatureName, setSignatureName] = useState("");
+  const [signatureDate, setSignatureDate] = useState(todayISO);
 
   const load = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user?.email) {
+      setEmailAddress((prev) => prev || user.email || "");
+    }
+
     const { data, error } = await supabase
       .from("transport_applications")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(1);
-    if (!error) setApplication((data?.[0] as Application) ?? null);
+
+    if (!error) {
+      setApplication((data?.[0] as Application) ?? null);
+    }
     setLoading(false);
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const resetForm = () => {
+    setTransportSite("Chiselhurst site");
+    setTitle("Mr");
+    setSurname("");
+    setFirstNames("");
+    setStudentNumber("");
+    setDateOfApplication(todayISO);
+    setDateOfBirth("");
+    setCitizenship("South African");
+    setCellNo("");
+    setPostalAddress("");
+    setResidenceName("");
+    setGuardianTitle("Mr");
+    setGuardianSurname("");
+    setGuardianFirstNames("");
+    setGuardianTelHome("");
+    setGuardianTelWork("");
+    setGuardianTelCell("");
+    setGuardianPostalAddress("");
+    setGuardianEmailAddress("");
+    setProposedCourseOfStudy("");
+    setSpecialTreatment("NO");
+    setDisabilitiesParticulars("");
+    setFormOfPayment("NSFAS / Bursary");
+    setIdFile(null);
+    setProofOfRegFile(null);
+    if (idInputRef.current) idInputRef.current.value = "";
+    if (proofInputRef.current) proofInputRef.current.value = "";
+    setDeclarationAccepted(false);
+    setSignatureName("");
+    setSignatureDate(todayISO);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!idFile) {
+      toast.error("Please upload a certified ID copy.");
+      return;
+    }
+
+    if (!proofOfRegFile) {
+      toast.error("Please upload proof of registration.");
+      return;
+    }
+
+    if (!declarationAccepted) {
+      toast.error("Please accept the applicant declaration before submitting.");
+      return;
+    }
+
+    if (!signatureName.trim()) {
+      toast.error("Please enter your signature name to confirm the declaration.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      // 1. Get the current authenticated user directly from the client session
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      validateDocumentFile(idFile, "Certified ID copy");
+      validateDocumentFile(proofOfRegFile, "Proof of registration");
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
       if (userError || !user) {
         throw new Error("You must be logged in to submit an application.");
       }
 
-      // 2. Insert directly using the Supabase client SDK (bypasses server function origin issues on mobile)
+      const uploadedIdPath = await uploadTransportDocument(user.id, idFile, "id");
+      const uploadedProofPath = await uploadTransportDocument(
+        user.id,
+        proofOfRegFile,
+        "proof_of_registration"
+      );
+
       const { data: row, error } = await supabase
         .from("transport_applications")
         .insert({
           user_id: user.id,
-          pickup_point: pickup.trim(),
-          dropoff_point: dropoff.trim(),
-          period: period as "1st Semester" | "2nd Semester" | "Full Year",
-          reason: reason.trim() ? reason.trim() : null,
+          transport_site: transportSite,
+          title: title.trim(),
+          surname: surname.trim(),
+          first_names: firstNames.trim(),
+          student_number: studentNumber.trim(),
+          date_of_application: dateOfApplication,
+          date_of_birth: dateOfBirth,
+          citizenship: citizenship.trim(),
+          cell_no: cellNo.trim(),
+          email_address: emailAddress.trim(),
+          postal_address: postalAddress.trim(),
+          residence_name: residenceName.trim(),
+          guardian_title: guardianTitle.trim(),
+          guardian_surname: guardianSurname.trim(),
+          guardian_first_names: guardianFirstNames.trim(),
+          guardian_tel_home: guardianTelHome.trim() || null,
+          guardian_tel_work: guardianTelWork.trim() || null,
+          guardian_tel_cell: guardianTelCell.trim(),
+          guardian_postal_address: guardianPostalAddress.trim(),
+          guardian_email_address: guardianEmailAddress.trim() || null,
+          proposed_course_of_study: proposedCourseOfStudy.trim(),
+          special_treatment: specialTreatment === "YES",
+          physical_disabilities_particulars: disabilitiesParticulars.trim() || null,
+          form_of_payment: formOfPayment,
+          id_document_url: uploadedIdPath,
+          proof_of_registration_url: uploadedProofPath,
+          declaration_accepted: declarationAccepted,
+          signature_name: signatureName.trim(),
+          signature_date: signatureDate,
         })
         .select()
         .single();
@@ -109,13 +340,12 @@ function TransportInner() {
 
       setApplication(row as Application);
       setShowForm(false);
-      setPickup(""); 
-      setDropoff(""); 
-      setReason(""); 
-      setPeriod("1st Semester");
+      resetForm();
       toast.success("Application submitted");
     } catch (err) {
-      toast.error((err as Error).message || "Could not submit your application. Please try again.");
+      toast.error(
+        (err as Error).message || "Could not submit your application. Please try again."
+      );
       void load();
     } finally {
       setSubmitting(false);
@@ -125,19 +355,20 @@ function TransportInner() {
   const status = application ? statusStyle(application.status) : null;
   const eligible = canReapply(application);
 
-
   return (
     <div className="pb-6">
       <header className="bg-gradient-card px-5 pt-12 pb-8 text-primary-foreground">
         <div className="flex items-center justify-between">
-          <Link to="/dashboard" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15">
+          <Link
+            to="/dashboard"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-base font-semibold">Transport</h1>
           <div className="w-10" />
         </div>
-        <div className="mt-5 h-[76px]">
-        </div>
+        <div className="mt-5 h-[76px]" />
       </header>
 
       <div className="px-5 mt-5 space-y-4">
@@ -155,7 +386,9 @@ function TransportInner() {
                 </p>
               </div>
               {status && (
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${status.tone}`}>
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${status.tone}`}
+                >
                   <status.icon className="h-3.5 w-3.5" /> {status.label}
                 </span>
               )}
@@ -163,23 +396,53 @@ function TransportInner() {
 
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Pickup</dt>
-                <dd className="text-right font-medium">{application.pickup_point}</dd>
+                <dt className="text-muted-foreground">Site</dt>
+                <dd className="text-right font-medium">{application.transport_site}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Drop-off</dt>
-                <dd className="text-right font-medium">{application.dropoff_point}</dd>
+                <dt className="text-muted-foreground">Applicant</dt>
+                <dd className="text-right font-medium">
+                  {application.title} {application.first_names} {application.surname}
+                </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Applying for</dt>
-                <dd className="text-right font-medium">{application.period}</dd>
+                <dt className="text-muted-foreground">Student No.</dt>
+                <dd className="text-right font-medium">{application.student_number}</dd>
               </div>
-              {application.reason && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Residence</dt>
+                <dd className="text-right font-medium">{application.residence_name}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Course</dt>
+                <dd className="text-right font-medium">{application.proposed_course_of_study}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Payment</dt>
+                <dd className="text-right font-medium">{application.form_of_payment}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Special treatment</dt>
+                <dd className="text-right font-medium">
+                  {application.special_treatment ? "YES" : "NO"}
+                </dd>
+              </div>
+              {application.physical_disabilities_particulars && (
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Reason</dt>
-                  <dd className="text-right font-medium">{application.reason}</dd>
+                  <dt className="text-muted-foreground">Disability details</dt>
+                  <dd className="text-right font-medium">
+                    {application.physical_disabilities_particulars}
+                  </dd>
                 </div>
               )}
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Certified ID</dt>
+                <dd className="text-right font-medium">Uploaded</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Proof of registration</dt>
+                <dd className="text-right font-medium">Uploaded</dd>
+              </div>
               {application.reviewed_at && (
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">Reviewed</dt>
@@ -198,12 +461,14 @@ function TransportInner() {
               )}
             </dl>
 
-            {application.status === "approved" && application.valid_until && !isExpired(application.valid_until) && (
-              <p className="rounded-xl bg-success/10 px-3 py-2 text-xs text-success">
-                Your transport application is valid until{" "}
-                {new Date(application.valid_until).toLocaleDateString()}.
-              </p>
-            )}
+            {application.status === "approved" &&
+              application.valid_until &&
+              !isExpired(application.valid_until) && (
+                <p className="rounded-xl bg-success/10 px-3 py-2 text-xs text-success">
+                  Your transport application is valid until{" "}
+                  {new Date(application.valid_until).toLocaleDateString()}.
+                </p>
+              )}
             {application.status === "approved" && isExpired(application.valid_until) && (
               <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
                 Your transport pass has expired. You may apply again.
@@ -221,62 +486,421 @@ function TransportInner() {
             )}
 
             {eligible && (
-              <Button variant="outline" className="w-full h-11" onClick={() => setShowForm(true)}>
+              <Button
+                variant="outline"
+                className="w-full h-11"
+                onClick={() => setShowForm(true)}
+              >
                 New application
               </Button>
             )}
           </div>
         ) : (
-          <form onSubmit={submit} className="rounded-2xl bg-card p-5 shadow-soft space-y-4">
+          <form
+            onSubmit={submit}
+            className="rounded-2xl bg-card p-5 shadow-soft space-y-5"
+          >
             <div>
               <h2 className="font-semibold">Apply for transport</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Subsidised travel for registered students.</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                WSU Transport Application — complete all required details.
+              </p>
             </div>
 
+            {/* Site Selection */}
             <div className="space-y-1.5">
-              <Label className="text-xs">Pickup point (Residence)</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input required value={pickup} onChange={(e) => setPickup(e.target.value)}
-                  className="pl-10 h-11" />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Drop-off point (Campus)</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input required value={dropoff} onChange={(e) => setDropoff(e.target.value)}
-                  className="pl-10 h-11" />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Applying for</Label>
-              <Select value={period} onValueChange={setPeriod}>
+              <Label className="text-xs">Transport site *</Label>
+              <Select
+                value={transportSite}
+                onValueChange={(val) => setTransportSite(val as TransportSite)}
+              >
                 <SelectTrigger className="h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1st Semester">1st Semester</SelectItem>
-                  <SelectItem value="2nd Semester">2nd Semester</SelectItem>
-                  <SelectItem value="Full Year">Full Year</SelectItem>
+                  <SelectItem value="Potsdam site">Potsdam site</SelectItem>
+                  <SelectItem value="Chiselhurst site">Chiselhurst site</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs">Reason (optional)</Label>
-              <Input value={reason} onChange={(e) => setReason(e.target.value)}
-                className="h-11" />
+            {/* (a) Applicant's Particulars */}
+            <div className="space-y-3 border-t pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                (a) Applicant&apos;s Particulars
+              </h3>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Title *</Label>
+                  <Input
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Mr / Ms"
+                    className="h-10"
+                  />
+                </div>
+                <div className="col-span-2 space-y-1">
+                  <Label className="text-xs">Surname *</Label>
+                  <Input
+                    required
+                    value={surname}
+                    onChange={(e) => setSurname(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">First names *</Label>
+                <Input
+                  required
+                  value={firstNames}
+                  onChange={(e) => setFirstNames(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Student number *</Label>
+                  <Input
+                    required
+                    value={studentNumber}
+                    onChange={(e) => setStudentNumber(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Date of application *</Label>
+                  <Input
+                    type="date"
+                    required
+                    value={dateOfApplication}
+                    onChange={(e) => setDateOfApplication(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Date of birth *</Label>
+                  <Input
+                    type="date"
+                    required
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Citizenship *</Label>
+                  <Input
+                    required
+                    value={citizenship}
+                    onChange={(e) => setCitizenship(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Cell no. *</Label>
+                <Input
+                  type="tel"
+                  required
+                  value={cellNo}
+                  onChange={(e) => setCellNo(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">E-mail address *</Label>
+                <Input
+                  type="email"
+                  required
+                  value={emailAddress}
+                  onChange={(e) => setEmailAddress(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Postal address *</Label>
+                <Input
+                  required
+                  value={postalAddress}
+                  onChange={(e) => setPostalAddress(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Residence name *</Label>
+                <Input
+                  required
+                  value={residenceName}
+                  onChange={(e) => setResidenceName(e.target.value)}
+                  className="h-10"
+                />
+              </div>
             </div>
 
-            <Button type="submit" disabled={submitting} className="w-full h-11 bg-gradient-primary gap-2">
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bus className="h-4 w-4" />}
+            {/* (b) Guardian or Parent's Particulars */}
+            <div className="space-y-3 border-t pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                (b) Guardian or Parent&apos;s Particulars
+              </h3>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Title *</Label>
+                  <Input
+                    required
+                    value={guardianTitle}
+                    onChange={(e) => setGuardianTitle(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+                <div className="col-span-2 space-y-1">
+                  <Label className="text-xs">Surname *</Label>
+                  <Input
+                    required
+                    value={guardianSurname}
+                    onChange={(e) => setGuardianSurname(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">First names *</Label>
+                <Input
+                  required
+                  value={guardianFirstNames}
+                  onChange={(e) => setGuardianFirstNames(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Tel (H)</Label>
+                  <Input
+                    type="tel"
+                    value={guardianTelHome}
+                    onChange={(e) => setGuardianTelHome(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Tel (W)</Label>
+                  <Input
+                    type="tel"
+                    value={guardianTelWork}
+                    onChange={(e) => setGuardianTelWork(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Tel (C) *</Label>
+                  <Input
+                    type="tel"
+                    required
+                    value={guardianTelCell}
+                    onChange={(e) => setGuardianTelCell(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Postal address *</Label>
+                <Input
+                  required
+                  value={guardianPostalAddress}
+                  onChange={(e) => setGuardianPostalAddress(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">E-mail address</Label>
+                <Input
+                  type="email"
+                  value={guardianEmailAddress}
+                  onChange={(e) => setGuardianEmailAddress(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+            </div>
+
+            {/* (c) Academic Information */}
+            <div className="space-y-3 border-t pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                (c) Academic Information
+              </h3>
+              <div className="space-y-1">
+                <Label className="text-xs">Proposed course of study *</Label>
+                <Input
+                  required
+                  value={proposedCourseOfStudy}
+                  onChange={(e) => setProposedCourseOfStudy(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+            </div>
+
+            {/* Special Treatment, Disability Details & Payment */}
+            <div className="space-y-3 border-t pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Special Treatment, Disability &amp; Payment
+              </h3>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Special treatment *</Label>
+                  <Select
+                    value={specialTreatment}
+                    onValueChange={(val) => setSpecialTreatment(val as "NO" | "YES")}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NO">NO</SelectItem>
+                      <SelectItem value="YES">YES</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs">Form of payment *</Label>
+                  <Select
+                    value={formOfPayment}
+                    onValueChange={(val) => setFormOfPayment(val as PaymentForm)}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NSFAS / Bursary">NSFAS / Bursary</SelectItem>
+                      <SelectItem value="Upfront Payment">Upfront Payment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Particulars of physical disabilities, if any</Label>
+                <Input
+                  value={disabilitiesParticulars}
+                  onChange={(e) => setDisabilitiesParticulars(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+            </div>
+
+            {/* Supporting Documents & Declaration */}
+            <div className="space-y-3 border-t pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Documents &amp; Declaration
+              </h3>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Certified ID copy (PDF, JPG, PNG, WEBP, max 5 MB) *</Label>
+                <Input
+                  ref={idInputRef}
+                  type="file"
+                  required
+                  accept=".pdf,image/jpeg,image/png,image/webp"
+                  onChange={(e) => setIdFile(e.target.files?.[0] ?? null)}
+                  className="h-10 py-1.5 text-xs"
+                />
+                {idFile && (
+                  <p className="text-[11px] text-muted-foreground">Selected: {idFile.name}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">
+                  Proof of registration (PDF, JPG, PNG, WEBP, max 5 MB) *
+                </Label>
+                <Input
+                  ref={proofInputRef}
+                  type="file"
+                  required
+                  accept=".pdf,image/jpeg,image/png,image/webp"
+                  onChange={(e) => setProofOfRegFile(e.target.files?.[0] ?? null)}
+                  className="h-10 py-1.5 text-xs"
+                />
+                {proofOfRegFile && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Selected: {proofOfRegFile.name}
+                  </p>
+                )}
+              </div>
+
+              <label className="flex items-start gap-2.5 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={declarationAccepted}
+                  onChange={(e) => setDeclarationAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-border"
+                />
+                <span>
+                  I declare that the information given in this application form is correct and that
+                  any false or incomplete information may lead to withdrawal of transport allocation
+                  or disciplinary action. I also agree to abide by all rules and regulations of
+                  Walter Sisulu University.
+                </span>
+              </label>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Signature (Full name) *</Label>
+                  <Input
+                    required
+                    value={signatureName}
+                    onChange={(e) => setSignatureName(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Date *</Label>
+                  <Input
+                    type="date"
+                    required
+                    value={signatureDate}
+                    onChange={(e) => setSignatureDate(e.target.value)}
+                    className="h-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-11 bg-gradient-primary gap-2"
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Bus className="h-4 w-4" />
+              )}
               Submit application
             </Button>
             {application && (
-              <Button type="button" variant="ghost" className="w-full h-10" onClick={() => setShowForm(false)}>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full h-10"
+                onClick={() => setShowForm(false)}
+              >
                 Cancel
               </Button>
             )}
