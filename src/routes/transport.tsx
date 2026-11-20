@@ -29,6 +29,14 @@ export const Route = createFileRoute("/transport")({
 type TransportSite = "Potsdam site" | "Chiselhurst site";
 type PaymentForm = "NSFAS / Bursary" | "Upfront Payment";
 
+type ProfileData = {
+  full_name: string;
+  student_number: string;
+  email: string;
+  course: string;
+  campus: string;
+};
+
 type Application = {
   id: string;
   transport_site: TransportSite;
@@ -152,6 +160,8 @@ function TransportInner() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [application, setApplication] = useState<Application | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [authEmail, setAuthEmail] = useState("");
   const [showForm, setShowForm] = useState(false);
 
   // Site & Applicant particulars
@@ -195,37 +205,84 @@ function TransportInner() {
   const [signatureName, setSignatureName] = useState("");
   const [signatureDate, setSignatureDate] = useState(todayISO);
 
+  const applyProfileDefaults = useCallback(
+    (prof: ProfileData | null, fallbackEmail: string) => {
+      if (prof?.full_name) {
+        const parts = prof.full_name.trim().split(/\s+/);
+        if (parts.length > 1) {
+          setSurname(parts[parts.length - 1]);
+          setFirstNames(parts.slice(0, -1).join(" "));
+        } else {
+          setFirstNames(parts[0]);
+          setSurname("");
+        }
+      } else {
+        setFirstNames("");
+        setSurname("");
+      }
+
+      setStudentNumber(prof?.student_number || "");
+      setProposedCourseOfStudy(prof?.course || "");
+      setEmailAddress(prof?.email || fallbackEmail || "");
+
+      if (prof?.campus) {
+        const lowerCampus = prof.campus.toLowerCase();
+        if (lowerCampus.includes("potsdam")) {
+          setTransportSite("Potsdam site");
+        } else if (lowerCampus.includes("chiselhurst")) {
+          setTransportSite("Chiselhurst site");
+        } else {
+          setTransportSite("Chiselhurst site");
+        }
+      } else {
+        setTransportSite("Chiselhurst site");
+      }
+    },
+    []
+  );
+
   const load = useCallback(async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (user?.email) {
-      setEmailAddress((prev) => prev || user.email || "");
+    if (user) {
+      const userEmail = user.email || "";
+      setAuthEmail(userEmail);
+
+      const [{ data: profileData }, { data: appData, error: appError }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("full_name, student_number, email, course, campus")
+            .eq("id", user.id)
+            .maybeSingle(),
+          supabase
+            .from("transport_applications")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(1),
+        ]);
+
+      if (profileData) {
+        setProfile(profileData);
+      }
+      applyProfileDefaults(profileData, userEmail);
+
+      if (!appError) {
+        setApplication((appData?.[0] as Application) ?? null);
+      }
     }
 
-    const { data, error } = await supabase
-      .from("transport_applications")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (!error) {
-      setApplication((data?.[0] as Application) ?? null);
-    }
     setLoading(false);
-  }, []);
+  }, [applyProfileDefaults]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   const resetForm = () => {
-    setTransportSite("Chiselhurst site");
     setTitle("Mr");
-    setSurname("");
-    setFirstNames("");
-    setStudentNumber("");
     setDateOfApplication(todayISO);
     setDateOfBirth("");
     setCitizenship("South African");
@@ -240,7 +297,6 @@ function TransportInner() {
     setGuardianTelCell("");
     setGuardianPostalAddress("");
     setGuardianEmailAddress("");
-    setProposedCourseOfStudy("");
     setSpecialTreatment("NO");
     setDisabilitiesParticulars("");
     setFormOfPayment("NSFAS / Bursary");
@@ -251,6 +307,7 @@ function TransportInner() {
     setDeclarationAccepted(false);
     setSignatureName("");
     setSignatureDate(todayISO);
+    applyProfileDefaults(profile, authEmail);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -503,7 +560,7 @@ function TransportInner() {
             <div>
               <h2 className="font-semibold">Apply for transport</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                WSU Transport Application — complete all required details.
+                WSU Transport Application — student card details are pre-filled and editable.
               </p>
             </div>
 
