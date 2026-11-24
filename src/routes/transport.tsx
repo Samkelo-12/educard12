@@ -27,7 +27,13 @@ export const Route = createFileRoute("/transport")({
 });
 
 type TransportSite = "Potsdam site" | "Chiselhurst site";
-type PaymentForm = "NSFAS / Bursary" | "Upfront Payment";
+type PaymentForm = "NSFAS" | "Bursary" | "Upfront Payment";
+type DocType =
+  | "id"
+  | "proof_of_registration"
+  | "bursary_proof"
+  | "residence_proof"
+  | "nsfas_proof";
 
 type ProfileData = {
   full_name: string;
@@ -65,6 +71,9 @@ type Application = {
   form_of_payment: PaymentForm;
   id_document_url: string;
   proof_of_registration_url: string;
+  bursary_proof_url: string | null;
+  residence_proof_url: string | null;
+  nsfas_proof_url: string | null;
   declaration_accepted: boolean;
   signature_name: string;
   signature_date: string;
@@ -96,7 +105,7 @@ function validateDocumentFile(file: File, label: string) {
 async function uploadTransportDocument(
   userId: string,
   file: File,
-  docType: "id" | "proof_of_registration"
+  docType: DocType
 ): Promise<string> {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const filePath = `${userId}/${docType}_${Date.now()}_${safeName}`;
@@ -110,7 +119,7 @@ async function uploadTransportDocument(
 
   if (error) {
     throw new Error(
-      `Failed to upload ${docType.replace("_", " ")}: ${error.message}`
+      `Failed to upload ${docType.replace(/_/g, " ")}: ${error.message}`
     );
   }
 
@@ -194,13 +203,21 @@ function TransportInner() {
   // Special treatment, disability details & payment
   const [specialTreatment, setSpecialTreatment] = useState<"NO" | "YES">("NO");
   const [disabilitiesParticulars, setDisabilitiesParticulars] = useState("");
-  const [formOfPayment, setFormOfPayment] = useState<PaymentForm>("NSFAS / Bursary");
+  const [formOfPayment, setFormOfPayment] = useState<PaymentForm>("NSFAS");
 
   // Supporting documents & declaration
   const [idFile, setIdFile] = useState<File | null>(null);
   const [proofOfRegFile, setProofOfRegFile] = useState<File | null>(null);
+  const [bursaryProofFile, setBursaryProofFile] = useState<File | null>(null);
+  const [residenceProofFile, setResidenceProofFile] = useState<File | null>(null);
+  const [nsfasProofFile, setNsfasProofFile] = useState<File | null>(null);
+
   const idInputRef = useRef<HTMLInputElement | null>(null);
   const proofInputRef = useRef<HTMLInputElement | null>(null);
+  const bursaryInputRef = useRef<HTMLInputElement | null>(null);
+  const residenceInputRef = useRef<HTMLInputElement | null>(null);
+  const nsfasInputRef = useRef<HTMLInputElement | null>(null);
+
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [signatureName, setSignatureName] = useState("");
   const [signatureDate, setSignatureDate] = useState(todayISO);
@@ -269,9 +286,9 @@ function TransportInner() {
       }
       applyProfileDefaults(profileData, userEmail);
 
-      if (!appError) {
-        setApplication((appData?.[0] as Application) ?? null);
-      }
+     if (!appError) {
+  setApplication((appData?.[0] as unknown as Application) ?? null);
+}
     }
 
     setLoading(false);
@@ -299,11 +316,17 @@ function TransportInner() {
     setGuardianEmailAddress("");
     setSpecialTreatment("NO");
     setDisabilitiesParticulars("");
-    setFormOfPayment("NSFAS / Bursary");
+    setFormOfPayment("NSFAS");
     setIdFile(null);
     setProofOfRegFile(null);
+    setBursaryProofFile(null);
+    setResidenceProofFile(null);
+    setNsfasProofFile(null);
     if (idInputRef.current) idInputRef.current.value = "";
     if (proofInputRef.current) proofInputRef.current.value = "";
+    if (bursaryInputRef.current) bursaryInputRef.current.value = "";
+    if (residenceInputRef.current) residenceInputRef.current.value = "";
+    if (nsfasInputRef.current) nsfasInputRef.current.value = "";
     setDeclarationAccepted(false);
     setSignatureName("");
     setSignatureDate(todayISO);
@@ -337,6 +360,15 @@ function TransportInner() {
     try {
       validateDocumentFile(idFile, "Certified ID copy");
       validateDocumentFile(proofOfRegFile, "Proof of registration");
+      if (bursaryProofFile) {
+        validateDocumentFile(bursaryProofFile, "Proof of bursary acceptance");
+      }
+      if (residenceProofFile) {
+        validateDocumentFile(residenceProofFile, "Proof of residence acceptance");
+      }
+      if (nsfasProofFile) {
+        validateDocumentFile(nsfasProofFile, "Proof of NSFAS funding");
+      }
 
       const {
         data: { user },
@@ -353,49 +385,64 @@ function TransportInner() {
         proofOfRegFile,
         "proof_of_registration"
       );
+      const uploadedBursaryPath = bursaryProofFile
+        ? await uploadTransportDocument(user.id, bursaryProofFile, "bursary_proof")
+        : null;
+      const uploadedResidencePath = residenceProofFile
+        ? await uploadTransportDocument(user.id, residenceProofFile, "residence_proof")
+        : null;
+      const uploadedNsfasPath = nsfasProofFile
+        ? await uploadTransportDocument(user.id, nsfasProofFile, "nsfas_proof")
+        : null;
 
-      const { data: row, error } = await supabase
-        .from("transport_applications")
-        .insert({
-          user_id: user.id,
-          transport_site: transportSite,
-          title: title.trim(),
-          surname: surname.trim(),
-          first_names: firstNames.trim(),
-          student_number: studentNumber.trim(),
-          date_of_application: dateOfApplication,
-          date_of_birth: dateOfBirth,
-          citizenship: citizenship.trim(),
-          cell_no: cellNo.trim(),
-          email_address: emailAddress.trim(),
-          postal_address: postalAddress.trim(),
-          residence_name: residenceName.trim(),
-          guardian_title: guardianTitle.trim(),
-          guardian_surname: guardianSurname.trim(),
-          guardian_first_names: guardianFirstNames.trim(),
-          guardian_tel_home: guardianTelHome.trim() || null,
-          guardian_tel_work: guardianTelWork.trim() || null,
-          guardian_tel_cell: guardianTelCell.trim(),
-          guardian_postal_address: guardianPostalAddress.trim(),
-          guardian_email_address: guardianEmailAddress.trim() || null,
-          proposed_course_of_study: proposedCourseOfStudy.trim(),
-          special_treatment: specialTreatment === "YES",
-          physical_disabilities_particulars: disabilitiesParticulars.trim() || null,
-          form_of_payment: formOfPayment,
-          id_document_url: uploadedIdPath,
-          proof_of_registration_url: uploadedProofPath,
-          declaration_accepted: declarationAccepted,
-          signature_name: signatureName.trim(),
-          signature_date: signatureDate,
-        })
-        .select()
-        .single();
+      const payload = {
+  user_id: user.id,
+  transport_site: transportSite,
+  title: title.trim(),
+  surname: surname.trim(),
+  first_names: firstNames.trim(),
+  student_number: studentNumber.trim(),
+  date_of_application: dateOfApplication,
+  date_of_birth: dateOfBirth,
+  citizenship: citizenship.trim(),
+  cell_no: cellNo.trim(),
+  email_address: emailAddress.trim(),
+  postal_address: postalAddress.trim(),
+  residence_name: residenceName.trim(),
+  guardian_title: guardianTitle.trim(),
+  guardian_surname: guardianSurname.trim(),
+  guardian_first_names: guardianFirstNames.trim(),
+  guardian_tel_home: guardianTelHome.trim() || null,
+  guardian_tel_work: guardianTelWork.trim() || null,
+  guardian_tel_cell: guardianTelCell.trim(),
+  guardian_postal_address: guardianPostalAddress.trim(),
+  guardian_email_address: guardianEmailAddress.trim() || null,
+  proposed_course_of_study: proposedCourseOfStudy.trim(),
+  special_treatment: specialTreatment === "YES",
+  physical_disabilities_particulars: disabilitiesParticulars.trim() || null,
+  form_of_payment: formOfPayment,
+  id_document_url: uploadedIdPath,
+  proof_of_registration_url: uploadedProofPath,
+  bursary_proof_url: uploadedBursaryPath,
+  residence_proof_url: uploadedResidencePath,
+  nsfas_proof_url: uploadedNsfasPath,
+  declaration_accepted: declarationAccepted,
+  signature_name: signatureName.trim(),
+  signature_date: signatureDate,
+};
 
-      if (error) {
-        throw new Error(error.message || "Could not submit your application.");
-      }
+const { data: row, error } = await supabase
+  .from("transport_applications")
+  .insert(payload as never)
+  .select()
+  .single();
 
-      setApplication(row as Application);
+if (error) {
+  throw new Error(error.message || "Could not submit your application.");
+}
+
+setApplication(row as unknown as Application);
+
       setShowForm(false);
       resetForm();
       toast.success("Application submitted");
@@ -500,6 +547,24 @@ function TransportInner() {
                 <dt className="text-muted-foreground">Proof of registration</dt>
                 <dd className="text-right font-medium">Uploaded</dd>
               </div>
+              {application.bursary_proof_url && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Proof of bursary acceptance</dt>
+                  <dd className="text-right font-medium">Uploaded</dd>
+                </div>
+              )}
+              {application.residence_proof_url && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Proof of residence acceptance</dt>
+                  <dd className="text-right font-medium">Uploaded</dd>
+                </div>
+              )}
+              {application.nsfas_proof_url && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Proof of NSFAS funding</dt>
+                  <dd className="text-right font-medium">Uploaded</dd>
+                </div>
+              )}
               {application.reviewed_at && (
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">Reviewed</dt>
@@ -844,7 +909,8 @@ function TransportInner() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="NSFAS / Bursary">NSFAS / Bursary</SelectItem>
+                      <SelectItem value="NSFAS">NSFAS</SelectItem>
+                      <SelectItem value="Bursary">Bursary</SelectItem>
                       <SelectItem value="Upfront Payment">Upfront Payment</SelectItem>
                     </SelectContent>
                   </Select>
@@ -872,62 +938,84 @@ function TransportInner() {
                 <Input
                   ref={idInputRef}
                   type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
                   required
-                  accept=".pdf,image/jpeg,image/png,image/webp"
                   onChange={(e) => setIdFile(e.target.files?.[0] ?? null)}
-                  className="h-10 py-1.5 text-xs"
+                  className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
                 />
-                {idFile && (
-                  <p className="text-[11px] text-muted-foreground">Selected: {idFile.name}</p>
-                )}
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs">
-                  Proof of registration (PDF, JPG, PNG, WEBP, max 5 MB) *
-                </Label>
+                <Label className="text-xs">Proof of registration (PDF, JPG, PNG, WEBP, max 5 MB) *</Label>
                 <Input
                   ref={proofInputRef}
                   type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
                   required
-                  accept=".pdf,image/jpeg,image/png,image/webp"
                   onChange={(e) => setProofOfRegFile(e.target.files?.[0] ?? null)}
-                  className="h-10 py-1.5 text-xs"
+                  className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
                 />
-                {proofOfRegFile && (
-                  <p className="text-[11px] text-muted-foreground">
-                    Selected: {proofOfRegFile.name}
-                  </p>
-                )}
               </div>
 
-              <label className="flex items-start gap-2.5 text-xs text-muted-foreground">
+              <div className="space-y-1">
+                <Label className="text-xs">Proof of bursary acceptance (PDF, JPG, PNG, WEBP, max 5 MB)</Label>
+                <Input
+                  ref={bursaryInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={(e) => setBursaryProofFile(e.target.files?.[0] ?? null)}
+                  className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Proof of residence acceptance (PDF, JPG, PNG, WEBP, max 5 MB)</Label>
+                <Input
+                  ref={residenceInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={(e) => setResidenceProofFile(e.target.files?.[0] ?? null)}
+                  className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Proof of NSFAS funding (PDF, JPG, PNG, WEBP, max 5 MB)</Label>
+                <Input
+                  ref={nsfasInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={(e) => setNsfasProofFile(e.target.files?.[0] ?? null)}
+                  className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
+                />
+              </div>
+
+              <label className="flex items-start gap-2 pt-1 text-xs leading-relaxed">
                 <input
                   type="checkbox"
                   checked={declarationAccepted}
                   onChange={(e) => setDeclarationAccepted(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-border"
+                  className="mt-0.5 h-4 w-4 rounded border-input"
                 />
                 <span>
-                  I declare that the information given in this application form is correct and that
-                  any false or incomplete information may lead to withdrawal of transport allocation
-                  or disciplinary action. I also agree to abide by all rules and regulations of
-                  Walter Sisulu University.
+                  I declare that the information provided in this transport application and any
+                  supporting documents uploaded are true and correct. *
                 </span>
               </label>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-xs">Signature (Full name) *</Label>
+                  <Label className="text-xs">Signature (full name) *</Label>
                   <Input
                     required
                     value={signatureName}
                     onChange={(e) => setSignatureName(e.target.value)}
+                    placeholder="Type full name"
                     className="h-10"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Date *</Label>
+                  <Label className="text-xs">Signature date *</Label>
                   <Input
                     type="date"
                     required
@@ -939,28 +1027,36 @@ function TransportInner() {
               </div>
             </div>
 
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="w-full h-11 bg-gradient-primary gap-2"
-            >
-              {submitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Bus className="h-4 w-4" />
+            <div className="flex gap-2 pt-2">
+              {showForm && application && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 flex-1"
+                  disabled={submitting}
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </Button>
               )}
-              Submit application
-            </Button>
-            {application && (
               <Button
-                type="button"
-                variant="ghost"
-                className="w-full h-10"
-                onClick={() => setShowForm(false)}
+                type="submit"
+                className="h-11 flex-1"
+                disabled={submitting}
               >
-                Cancel
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting…
+                  </>
+                ) : (
+                  <>
+                    <Bus className="mr-2 h-4 w-4" />
+                    Submit application
+                  </>
+                )}
               </Button>
-            )}
+            </div>
           </form>
         )}
       </div>

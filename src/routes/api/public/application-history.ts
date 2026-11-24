@@ -5,11 +5,50 @@ const BodySchema = z.object({
   secret: z.string().min(1),
 });
 
+const BUCKET = 'transport-documents';
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function toSignedUrl(supabaseAdmin: any, rawValue: unknown): Promise<string | null> {
+  if (typeof rawValue !== 'string') return null;
+  const trimmed = rawValue.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  const normalizedPath = trimmed.replace(/^transport-documents\//, '');
+  const { data } = await supabaseAdmin.storage
+    .from(BUCKET)
+    .createSignedUrl(normalizedPath, 60 * 15);
+  return data?.signedUrl ?? null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resolveDocuments(supabaseAdmin: any, row: Record<string, unknown>) {
+  const docs: Array<{ label: string; url: string }> = [];
+
+  const entries: Array<[unknown, string]> = [
+    [row.id_document_url, 'Certified ID Copy'],
+    [row.proof_of_registration_url, 'Proof of Registration'],
+    [row.bursary_proof_url, 'Proof of Bursary Acceptance'],
+    [row.residence_proof_url, 'Proof of Residence Acceptance'],
+    [row.nsfas_proof_url, 'Proof of NSFAS Funding'],
+  ];
+
+  for (const [rawVal, label] of entries) {
+    const signedUrl = await toSignedUrl(supabaseAdmin, rawVal);
+    if (signedUrl) {
+      docs.push({ label, url: signedUrl });
+    }
+  }
+
+  return docs;
 }
 
 export const Route = createFileRoute('/api/public/application-history')({
@@ -36,7 +75,7 @@ export const Route = createFileRoute('/api/public/application-history')({
 
         const { data, error } = await supabaseAdmin
           .from('transport_applications')
-          .select('id, user_id, transport_site, status, created_at, reviewed_at, valid_until')
+          .select('*')
           .neq('status', 'pending')
           .order('reviewed_at', { ascending: false });
 
@@ -44,7 +83,17 @@ export const Route = createFileRoute('/api/public/application-history')({
           return json({ success: false, error: error.message }, 500);
         }
 
-        const rows = data ?? [];
+        const rows = (data ?? []) as Array<
+          Record<string, unknown> & {
+            id: string;
+            user_id: string;
+            status: string;
+            created_at: string;
+            reviewed_at: string | null;
+            valid_until: string | null;
+          }
+        >;
+
         const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
         const profileMap = new Map<string, { full_name: string; student_number: string }>();
 
@@ -58,19 +107,24 @@ export const Route = createFileRoute('/api/public/application-history')({
           }
         }
 
-        const applications = rows.map((row) => {
-          const profile = profileMap.get(row.user_id) ?? null;
-          return {
-            id: row.id,
-            transport_site: row.transport_site,
-            status: row.status,
-            created_at: row.created_at,
-            reviewed_at: row.reviewed_at,
-            valid_until: row.valid_until,
-            student_name: profile?.full_name || 'Unknown student',
-            student_number: profile?.student_number || '',
-          };
-        });
+        const applications = await Promise.all(
+          rows.map(async (row) => {
+            const profile = profileMap.get(row.user_id) ?? null;
+            const documents = await resolveDocuments(supabaseAdmin, row);
+            const fallbackName = [row.first_names, row.surname].filter(Boolean).join(' ').trim();
+            return {
+              ...row,
+              id: row.id,
+              status: row.status,
+              created_at: row.created_at,
+              reviewed_at: row.reviewed_at,
+              valid_until: row.valid_until,
+              student_name: profile?.full_name || fallbackName || 'Unknown student',
+              student_number: profile?.student_number || String(row.student_number ?? ''),
+              documents,
+            };
+          }),
+        );
 
         return json({ success: true, applications });
       },

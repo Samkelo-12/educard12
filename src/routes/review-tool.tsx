@@ -1,16 +1,58 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
-import { Check, History, Inbox, Lock, RefreshCw, X } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  FileText,
+  History,
+  Inbox,
+  Lock,
+  RefreshCw,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+type ApplicationDocument = {
+  label: string;
+  url: string;
+};
+
 type PendingApplication = {
   id: string;
   transport_site?: string | null;
+  title?: string | null;
+  surname?: string | null;
+  first_names?: string | null;
+  date_of_application?: string | null;
+  date_of_birth?: string | null;
+  citizenship?: string | null;
+  cell_no?: string | null;
+  email_address?: string | null;
+  postal_address?: string | null;
+  residence_name?: string | null;
+  guardian_title?: string | null;
+  guardian_surname?: string | null;
+  guardian_first_names?: string | null;
+  guardian_tel_home?: string | null;
+  guardian_tel_work?: string | null;
+  guardian_tel_cell?: string | null;
+  guardian_postal_address?: string | null;
+  guardian_email_address?: string | null;
+  proposed_course_of_study?: string | null;
+  special_treatment?: boolean | null;
+  physical_disabilities_particulars?: string | null;
+  form_of_payment?: string | null;
+  declaration_accepted?: boolean | null;
+  signature_name?: string | null;
+  signature_date?: string | null;
   created_at: string;
   student_name: string;
   student_number: string;
+  documents?: ApplicationDocument[];
 };
 
 type HistoryApplication = PendingApplication & {
@@ -32,18 +74,29 @@ export const Route = createFileRoute('/review-tool')({
   component: ReviewToolPage,
 });
 
+function formatValue(val: unknown): string {
+  if (val === null || val === undefined || val === '') return '—';
+  if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+  return String(val);
+}
+
 function ReviewToolPage() {
   const [secret, setSecret] = useState('');
   const [secretInput, setSecretInput] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [applications, setApplications] = useState<PendingApplication[]>([]);
   const [history, setHistory] = useState<HistoryApplication[]>([]);
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
   const [tab, setTab] = useState<Tab>('pending');
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const loadApplications = useCallback(async (key: string) => {
     setLoading(true);
@@ -153,6 +206,89 @@ function ReviewToolPage() {
     </button>
   );
 
+  const renderDetailsAndDocuments = (app: PendingApplication) => {
+    const docs = Array.isArray(app.documents) ? app.documents : [];
+    const guardianFullName = [app.guardian_title, app.guardian_first_names, app.guardian_surname]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+
+    const detailItems: Array<[string, string]> = [
+      ['Transport Site', formatValue(app.transport_site)],
+      ['Date of Application', formatValue(app.date_of_application)],
+      ['Date of Birth', formatValue(app.date_of_birth)],
+      ['Citizenship', formatValue(app.citizenship)],
+      ['Cell No.', formatValue(app.cell_no)],
+      ['Email Address', formatValue(app.email_address)],
+      ['Postal Address', formatValue(app.postal_address)],
+      ['Residence Name', formatValue(app.residence_name)],
+      ['Proposed Course', formatValue(app.proposed_course_of_study)],
+      ['Payment Method', formatValue(app.form_of_payment)],
+      ['Special Treatment', formatValue(app.special_treatment)],
+      ['Disability Particulars', formatValue(app.physical_disabilities_particulars)],
+      ['Guardian Name', guardianFullName || '—'],
+      ['Guardian Cell', formatValue(app.guardian_tel_cell)],
+      ['Guardian Home Tel', formatValue(app.guardian_tel_home)],
+      ['Guardian Work Tel', formatValue(app.guardian_tel_work)],
+      ['Guardian Email', formatValue(app.guardian_email_address)],
+      ['Guardian Postal Address', formatValue(app.guardian_postal_address)],
+      ['Declaration Accepted', formatValue(app.declaration_accepted)],
+      ['Signature & Date', `${formatValue(app.signature_name)} (${formatValue(app.signature_date)})`],
+    ];
+
+    return (
+      <div className="space-y-3 rounded-xl border border-border bg-background/60 p-3 text-xs">
+        <div className="space-y-1.5">
+          <p className="font-semibold uppercase tracking-wide text-muted-foreground">
+            Application Form Details
+          </p>
+          <dl className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            {detailItems.map(([label, val]) => (
+              <div key={label} className="rounded-lg border border-border/60 bg-card px-2.5 py-1.5">
+                <dt className="text-[11px] text-muted-foreground">{label}</dt>
+                <dd className="font-medium text-foreground break-words">{val}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className="space-y-1.5">
+          <p className="font-semibold uppercase tracking-wide text-muted-foreground">
+            Uploaded Documents
+          </p>
+          {docs.length === 0 ? (
+            <p className="rounded-lg border border-border/60 bg-card px-2.5 py-2 text-muted-foreground">
+              No uploaded documents found for this application.
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {docs.map((doc) => (
+                <li
+                  key={doc.label}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-card px-2.5 py-2"
+                >
+                  <span className="flex items-center gap-2 font-medium text-foreground truncate">
+                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{doc.label}</span>
+                  </span>
+                  <a
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] font-medium hover:bg-accent"
+                  >
+                    Open
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background px-4 py-10 text-foreground">
       <div className="mx-auto w-full max-w-md space-y-6">
@@ -244,48 +380,69 @@ function ReviewToolPage() {
                 ) : null}
 
                 <ul className="space-y-3">
-                  {applications.map((app) => (
-                    <li key={app.id} className="space-y-3 rounded-2xl border border-border bg-card p-4">
-                      <div className="space-y-1">
-                        <p className="font-semibold">
-                          {app.student_name}
-                          {app.student_number ? (
-                            <span className="ml-2 text-xs font-normal text-muted-foreground">
-                              {app.student_number}
-                            </span>
-                          ) : null}
-                        </p>
-                        <p className="text-xs text-muted-foreground break-all">ID: {app.id}</p>
-                        <p className="text-sm">
-                          Site: {app.transport_site || 'Not specified'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Submitted {new Date(app.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
+                  {applications.map((app) => {
+                    const isExpanded = Boolean(expandedIds[app.id]);
+                    return (
+                      <li key={app.id} className="space-y-3 rounded-2xl border border-border bg-card p-4">
+                        <div className="space-y-1">
+                          <p className="font-semibold">
+                            {app.student_name}
+                            {app.student_number ? (
+                              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                {app.student_number}
+                              </span>
+                            ) : null}
+                          </p>
+                          <p className="text-xs text-muted-foreground break-all">ID: {app.id}</p>
+                          <p className="text-sm">
+                            Site: {app.transport_site || 'Not specified'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Submitted {new Date(app.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+
                         <Button
+                          type="button"
+                          variant="outline"
                           size="sm"
-                          className="flex-1"
-                          disabled={busyId === app.id}
-                          onClick={() => void review(app.id, 'approved')}
+                          className="w-full justify-between"
+                          onClick={() => toggleExpanded(app.id)}
                         >
-                          <Check className="h-4 w-4" />
-                          Approve
+                          <span>{isExpanded ? 'Hide Details & Documents' : 'View Details & Documents'}</span>
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="flex-1"
-                          disabled={busyId === app.id}
-                          onClick={() => void review(app.id, 'rejected')}
-                        >
-                          <X className="h-4 w-4" />
-                          Reject
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
+
+                        {isExpanded ? renderDetailsAndDocuments(app) : null}
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            disabled={busyId === app.id}
+                            onClick={() => void review(app.id, 'approved')}
+                          >
+                            <Check className="h-4 w-4" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1"
+                            disabled={busyId === app.id}
+                            onClick={() => void review(app.id, 'rejected')}
+                          >
+                            <X className="h-4 w-4" />
+                            Reject
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </>
             ) : (
@@ -305,6 +462,7 @@ function ReviewToolPage() {
                 <ul className="space-y-3">
                   {filteredHistory.map((app) => {
                     const active = isActive(app);
+                    const isExpanded = Boolean(expandedIds[app.id]);
                     return (
                       <li key={app.id} className="space-y-2 rounded-2xl border border-border bg-card p-4">
                         <div className="flex items-start justify-between gap-2">
@@ -343,6 +501,23 @@ function ReviewToolPage() {
                             ? ` · Valid until ${new Date(app.valid_until).toLocaleDateString()}`
                             : ''}
                         </p>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-between"
+                          onClick={() => toggleExpanded(app.id)}
+                        >
+                          <span>{isExpanded ? 'Hide Details & Documents' : 'View Details & Documents'}</span>
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+
+                        {isExpanded ? renderDetailsAndDocuments(app) : null}
                       </li>
                     );
                   })}
