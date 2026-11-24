@@ -36,7 +36,7 @@ export const Route = createFileRoute('/api/public/pending-applications')({
 
         const { data, error } = await supabaseAdmin
           .from('transport_applications')
-          .select('id, user_id, pickup_point, dropoff_point, period, status, created_at')
+          .select('id, user_id, transport_site, status, created_at')
           .eq('status', 'pending')
           .order('created_at', { ascending: true });
 
@@ -62,9 +62,7 @@ export const Route = createFileRoute('/api/public/pending-applications')({
           const profile = profileMap.get(row.user_id) ?? null;
           return {
             id: row.id,
-            pickup_point: row.pickup_point,
-            dropoff_point: row.dropoff_point,
-            period: row.period,
+            transport_site: row.transport_site,
             created_at: row.created_at,
             student_name: profile?.full_name || 'Unknown student',
             student_number: profile?.student_number || '',

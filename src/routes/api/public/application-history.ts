@@ -36,7 +36,7 @@ export const Route = createFileRoute('/api/public/application-history')({
 
         const { data, error } = await supabaseAdmin
           .from('transport_applications')
-          .select('id, user_id, pickup_point, dropoff_point, period, status, created_at, reviewed_at, valid_until')
+          .select('id, user_id, transport_site, status, created_at, reviewed_at, valid_until')
           .neq('status', 'pending')
           .order('reviewed_at', { ascending: false });
 
@@ -62,9 +62,7 @@ export const Route = createFileRoute('/api/public/application-history')({
           const profile = profileMap.get(row.user_id) ?? null;
           return {
             id: row.id,
-            pickup_point: row.pickup_point,
-            dropoff_point: row.dropoff_point,
-            period: row.period,
+            transport_site: row.transport_site,
             status: row.status,
             created_at: row.created_at,
             reviewed_at: row.reviewed_at,
