@@ -7,9 +7,7 @@ import { Label } from '@/components/ui/label';
 
 type PendingApplication = {
   id: string;
-  pickup_point: string;
-  dropoff_point: string;
-  period: string;
+  transport_site?: string | null;
   created_at: string;
   student_name: string;
   student_number: string;
@@ -259,10 +257,10 @@ function ReviewToolPage() {
                         </p>
                         <p className="text-xs text-muted-foreground break-all">ID: {app.id}</p>
                         <p className="text-sm">
-                          {app.pickup_point} → {app.dropoff_point}
+                          Site: {app.transport_site || 'Not specified'}
                         </p>
-                        <p className="text-xs text-muted-foreground capitalize">
-                          Period: {app.period} · Submitted {new Date(app.created_at).toLocaleDateString()}
+                        <p className="text-xs text-muted-foreground">
+                          Submitted {new Date(app.created_at).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -336,10 +334,10 @@ function ReviewToolPage() {
                         </div>
                         <p className="text-xs text-muted-foreground break-all">ID: {app.id}</p>
                         <p className="text-sm">
-                          {app.pickup_point} → {app.dropoff_point}
+                          Site: {app.transport_site || 'Not specified'}
                         </p>
-                        <p className="text-xs text-muted-foreground capitalize">
-                          Period: {app.period} · Reviewed{' '}
+                        <p className="text-xs text-muted-foreground">
+                          Reviewed{' '}
                           {app.reviewed_at ? new Date(app.reviewed_at).toLocaleDateString() : '—'}
                           {app.valid_until
                             ? ` · Valid until ${new Date(app.valid_until).toLocaleDateString()}`
