@@ -30,7 +30,7 @@ function Splash() {
           </div>
           <div className="text-center">
             <h1 className="text-3xl font-bold tracking-tight">EduCard</h1>
-            <p className="mt-2 text-sm text-primary-foreground/80">Your digital student card</p>
+            <p className="mt-2 text-sm text-primary-foreground/80">Smarter campus in your pocket</p>
           </div>
           <div className="mt-10 flex gap-1.5">
             <span className="h-2 w-2 rounded-full bg-white/80 animate-pulse" />
