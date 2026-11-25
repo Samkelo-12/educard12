@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Check,
   ChevronDown,
@@ -10,11 +10,19 @@ import {
   Inbox,
   Lock,
   RefreshCw,
+  Search,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type ApplicationDocument = {
   label: string;
@@ -59,10 +67,13 @@ type HistoryApplication = PendingApplication & {
   status: string;
   reviewed_at: string | null;
   valid_until: string | null;
+  rejection_reason?: string | null;
 };
 
 type Tab = 'pending' | 'history';
 type HistoryFilter = 'all' | 'approved' | 'rejected';
+type PaymentFilter = 'ALL' | 'NSFAS' | 'Bursary' | 'Upfront Payment';
+type SiteFilter = 'ALL' | 'Potsdam site' | 'Chiselhurst site';
 
 export const Route = createFileRoute('/review-tool')({
   head: () => ({
@@ -87,6 +98,12 @@ function ReviewToolPage() {
   const [applications, setApplications] = useState<PendingApplication[]>([]);
   const [history, setHistory] = useState<HistoryApplication[]>([]);
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
+  const [previewKeys, setPreviewKeys] = useState<Record<string, boolean>>({});
+  const [brokenPreviewKeys, setBrokenPreviewKeys] = useState<Record<string, boolean>>({});
+  const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('ALL');
+  const [siteFilter, setSiteFilter] = useState<SiteFilter>('ALL');
   const [tab, setTab] = useState<Tab>('pending');
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
   const [loading, setLoading] = useState(false);
@@ -96,6 +113,15 @@ function ReviewToolPage() {
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const togglePreview = (key: string) => {
+    setBrokenPreviewKeys((prev) => ({ ...prev, [key]: false }));
+    setPreviewKeys((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const setRejectionReason = (id: string, value: string) => {
+    setRejectionReasons((prev) => ({ ...prev, [id]: value }));
   };
 
   const loadApplications = useCallback(async (key: string) => {
@@ -138,11 +164,21 @@ function ReviewToolPage() {
       setBusyId(applicationId);
       setError('');
       setNotice('');
+      const reason =
+        status === 'rejected'
+          ? (rejectionReasons[applicationId] ?? '').trim() || null
+          : null;
+
       try {
         const res = await fetch('/api/public/admin-review-application', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ applicationId, status, secret }),
+          body: JSON.stringify({
+            applicationId,
+            status,
+            secret,
+            ...(status === 'rejected' ? { rejectionReason: reason } : {}),
+          }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
@@ -157,13 +193,26 @@ function ReviewToolPage() {
               status,
               reviewed_at: new Date().toISOString(),
               valid_until: data.application?.valid_until ?? null,
+              rejection_reason:
+                status === 'rejected'
+                  ? (data.application?.rejection_reason ?? reason)
+                  : null,
             },
             ...prev,
           ]);
         }
+        if (status === 'rejected') {
+          setRejectionReasons((prev) => {
+            const next = { ...prev };
+            delete next[applicationId];
+            return next;
+          });
+        }
         const valid = data.application?.valid_until;
         setNotice(
-          `Application ${status}${valid ? ` — valid until ${valid}` : ''}.`,
+          `Application ${status}${valid ? ` — valid until ${valid}` : ''}${
+            status === 'rejected' && reason ? ` (${reason})` : ''
+          }.`,
         );
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Review failed');
@@ -171,7 +220,7 @@ function ReviewToolPage() {
         setBusyId(null);
       }
     },
-    [secret, applications],
+    [secret, applications, rejectionReasons],
   );
 
   const unlock = (e: React.FormEvent) => {
@@ -185,11 +234,62 @@ function ReviewToolPage() {
     app.status === 'approved' &&
     (!app.valid_until || new Date(app.valid_until) >= new Date());
 
-  const filteredHistory = history.filter((app) => {
-    if (historyFilter === 'approved') return isActive(app);
-    if (historyFilter === 'rejected') return app.status === 'rejected';
-    return true;
-  });
+  const matchesSearchAndFilters = useCallback(
+    (app: PendingApplication) => {
+      if (paymentFilter !== 'ALL' && app.form_of_payment !== paymentFilter) {
+        return false;
+      }
+      if (siteFilter !== 'ALL' && app.transport_site !== siteFilter) {
+        return false;
+      }
+
+      const q = searchQuery.trim().toLowerCase();
+      if (!q) return true;
+
+      const haystack = [
+        app.id,
+        app.student_name,
+        app.student_number,
+        app.first_names,
+        app.surname,
+        app.residence_name,
+        app.proposed_course_of_study,
+        app.transport_site,
+        app.form_of_payment,
+        app.email_address,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(q);
+    },
+    [paymentFilter, siteFilter, searchQuery],
+  );
+
+  const filteredPending = useMemo(
+    () => applications.filter(matchesSearchAndFilters),
+    [applications, matchesSearchAndFilters],
+  );
+
+  const filteredHistory = useMemo(
+    () =>
+      history.filter((app) => {
+        if (historyFilter === 'approved' && !isActive(app)) return false;
+        if (historyFilter === 'rejected' && app.status !== 'rejected') return false;
+        return matchesSearchAndFilters(app);
+      }),
+    [history, historyFilter, matchesSearchAndFilters],
+  );
+
+  const hasActiveFilters =
+    Boolean(searchQuery.trim()) || paymentFilter !== 'ALL' || siteFilter !== 'ALL';
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setPaymentFilter('ALL');
+    setSiteFilter('ALL');
+  };
 
   const filterButton = (value: HistoryFilter, label: string) => (
     <button
@@ -261,27 +361,71 @@ function ReviewToolPage() {
               No uploaded documents found for this application.
             </p>
           ) : (
-            <ul className="space-y-1.5">
-              {docs.map((doc) => (
-                <li
-                  key={doc.label}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-card px-2.5 py-2"
-                >
-                  <span className="flex items-center gap-2 font-medium text-foreground truncate">
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate">{doc.label}</span>
-                  </span>
-                  <a
-                    href={doc.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] font-medium hover:bg-accent"
+            <ul className="space-y-2">
+              {docs.map((doc, idx) => {
+                const docKey = `${app.id}-${doc.label}-${idx}`;
+                const isPreviewOpen = Boolean(previewKeys[docKey]);
+                const isBrokenImage = Boolean(brokenPreviewKeys[docKey]);
+
+                return (
+                  <li
+                    key={docKey}
+                    className="space-y-2 rounded-lg border border-border/60 bg-card px-2.5 py-2"
                   >
-                    Open
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </li>
-              ))}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-2 font-medium text-foreground truncate">
+                        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="truncate">{doc.label}</span>
+                      </span>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => togglePreview(docKey)}
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] font-medium hover:bg-accent"
+                        >
+                          {isPreviewOpen ? 'Hide' : 'Preview'}
+                        </button>
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] font-medium hover:bg-accent"
+                        >
+                          Open
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+
+                    {isPreviewOpen ? (
+                      <div className="overflow-hidden rounded-md border border-border/60 bg-background/80 p-2">
+                        {!isBrokenImage ? (
+                          <img
+                            src={doc.url}
+                            alt={doc.label}
+                            onError={() =>
+                              setBrokenPreviewKeys((prev) => ({ ...prev, [docKey]: true }))
+                            }
+                            className="max-h-72 w-full rounded object-contain"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-between gap-2 py-2 text-[11px] text-muted-foreground">
+                            <span>Inline preview isn&apos;t available for this file (e.g. PDF).</span>
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-primary hover:underline"
+                            >
+                              Open file
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -347,10 +491,82 @@ function ReviewToolPage() {
               </button>
             </div>
 
+            {/* Search & Filters (Funding + Site) */}
+            <div className="space-y-2.5 rounded-2xl border border-border bg-card p-3.5">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search name, student no., residence, course..."
+                  className="h-10 pl-9 pr-8 text-xs"
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Funding / Payment</Label>
+                  <Select
+                    value={paymentFilter}
+                    onValueChange={(val) => setPaymentFilter(val as PaymentFilter)}
+                  >
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">All funding</SelectItem>
+                      <SelectItem value="NSFAS">NSFAS</SelectItem>
+                      <SelectItem value="Bursary">Bursary</SelectItem>
+                      <SelectItem value="Upfront Payment">Upfront Payment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Transport Site</Label>
+                  <Select
+                    value={siteFilter}
+                    onValueChange={(val) => setSiteFilter(val as SiteFilter)}
+                  >
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">All sites</SelectItem>
+                      <SelectItem value="Potsdam site">Potsdam site</SelectItem>
+                      <SelectItem value="Chiselhurst site">Chiselhurst site</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {hasActiveFilters ? (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="text-[11px] font-medium text-primary hover:underline"
+                  >
+                    Reset search &amp; filters
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
                 {tab === 'pending'
-                  ? `${applications.length} pending application${applications.length === 1 ? '' : 's'}`
+                  ? `${filteredPending.length} of ${applications.length} pending`
                   : `${filteredHistory.length} reviewed application${filteredHistory.length === 1 ? '' : 's'}`}
               </p>
               <Button
@@ -373,14 +589,16 @@ function ReviewToolPage() {
 
             {tab === 'pending' ? (
               <>
-                {applications.length === 0 && !loading ? (
+                {filteredPending.length === 0 && !loading ? (
                   <p className="rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-                    No pending applications.
+                    {applications.length === 0
+                      ? 'No pending applications.'
+                      : 'No pending applications match your search or filters.'}
                   </p>
                 ) : null}
 
                 <ul className="space-y-3">
-                  {applications.map((app) => {
+                  {filteredPending.map((app) => {
                     const isExpanded = Boolean(expandedIds[app.id]);
                     return (
                       <li key={app.id} className="space-y-3 rounded-2xl border border-border bg-card p-4">
@@ -395,7 +613,8 @@ function ReviewToolPage() {
                           </p>
                           <p className="text-xs text-muted-foreground break-all">ID: {app.id}</p>
                           <p className="text-sm">
-                            Site: {app.transport_site || 'Not specified'}
+                            Site: {app.transport_site || 'Not specified'} · Funding:{' '}
+                            {app.form_of_payment || 'Not specified'}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Submitted {new Date(app.created_at).toLocaleDateString()}
@@ -418,6 +637,22 @@ function ReviewToolPage() {
                         </Button>
 
                         {isExpanded ? renderDetailsAndDocuments(app) : null}
+
+                        <div className="space-y-1">
+                          <Label
+                            htmlFor={`reject-reason-${app.id}`}
+                            className="text-[11px] text-muted-foreground"
+                          >
+                            Rejection reason (optional)
+                          </Label>
+                          <Input
+                            id={`reject-reason-${app.id}`}
+                            value={rejectionReasons[app.id] ?? ''}
+                            onChange={(e) => setRejectionReason(app.id, e.target.value)}
+                            placeholder="Optional note if rejecting..."
+                            className="h-9 text-xs"
+                          />
+                        </div>
 
                         <div className="flex gap-2">
                           <Button
@@ -492,8 +727,14 @@ function ReviewToolPage() {
                         </div>
                         <p className="text-xs text-muted-foreground break-all">ID: {app.id}</p>
                         <p className="text-sm">
-                          Site: {app.transport_site || 'Not specified'}
+                          Site: {app.transport_site || 'Not specified'} · Funding:{' '}
+                          {app.form_of_payment || 'Not specified'}
                         </p>
+                        {app.status === 'rejected' && app.rejection_reason ? (
+                          <p className="rounded-lg bg-red-500/10 px-2.5 py-1.5 text-xs text-red-600 dark:text-red-400">
+                            Reason: {app.rejection_reason}
+                          </p>
+                        ) : null}
                         <p className="text-xs text-muted-foreground">
                           Reviewed{' '}
                           {app.reviewed_at ? new Date(app.reviewed_at).toLocaleDateString() : '—'}

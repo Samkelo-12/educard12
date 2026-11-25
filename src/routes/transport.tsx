@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, Bus, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Bus, CheckCircle2, Clock, XCircle, Loader2, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,6 @@ type Application = {
   citizenship: string;
   cell_no: string;
   email_address: string;
-  postal_address: string;
   residence_name: string;
   guardian_surname: string;
   guardian_first_names: string;
@@ -78,6 +77,7 @@ type Application = {
   signature_name: string;
   signature_date: string;
   status: string;
+  rejection_reason?: string | null;
   created_at: string;
   reviewed_at: string | null;
   valid_until: string | null;
@@ -92,6 +92,12 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 const todayISO = new Date().toISOString().split("T")[0];
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 function validateDocumentFile(file: File, label: string) {
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
@@ -165,6 +171,31 @@ function statusStyle(status: string) {
   }
 }
 
+function SelectedFileBadge({
+  file,
+  onClear,
+}: {
+  file: File | null;
+  onClear: () => void;
+}) {
+  if (!file) return null;
+  return (
+    <div className="mt-1 flex items-center justify-between gap-2 rounded-lg bg-muted/60 px-2.5 py-1 text-[11px] text-muted-foreground">
+      <span className="truncate">
+        {file.name} ({formatFileSize(file.size)})
+      </span>
+      <button
+        type="button"
+        onClick={onClear}
+        className="inline-flex shrink-0 items-center gap-0.5 font-medium text-foreground hover:text-destructive"
+      >
+        <X className="h-3 w-3" />
+        Clear
+      </button>
+    </div>
+  );
+}
+
 function TransportInner() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -184,7 +215,6 @@ function TransportInner() {
   const [citizenship, setCitizenship] = useState("South African");
   const [cellNo, setCellNo] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
-  const [postalAddress, setPostalAddress] = useState("");
   const [residenceName, setResidenceName] = useState("");
 
   // Guardian / Parent particulars
@@ -221,6 +251,17 @@ function TransportInner() {
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [signatureName, setSignatureName] = useState("");
   const [signatureDate, setSignatureDate] = useState(todayISO);
+
+  const isNsfasRequired = formOfPayment === "NSFAS";
+  const isBursaryRequired = formOfPayment === "Bursary";
+
+  const clearFile = (
+    setter: React.Dispatch<React.SetStateAction<File | null>>,
+    ref: React.RefObject<HTMLInputElement | null>
+  ) => {
+    setter(null);
+    if (ref.current) ref.current.value = "";
+  };
 
   const applyProfileDefaults = useCallback(
     (prof: ProfileData | null, fallbackEmail: string) => {
@@ -286,9 +327,9 @@ function TransportInner() {
       }
       applyProfileDefaults(profileData, userEmail);
 
-     if (!appError) {
-  setApplication((appData?.[0] as unknown as Application) ?? null);
-}
+      if (!appError) {
+        setApplication(((appData?.[0] as unknown) as Application) ?? null);
+      }
     }
 
     setLoading(false);
@@ -304,7 +345,6 @@ function TransportInner() {
     setDateOfBirth("");
     setCitizenship("South African");
     setCellNo("");
-    setPostalAddress("");
     setResidenceName("");
     setGuardianTitle("Mr");
     setGuardianSurname("");
@@ -317,16 +357,11 @@ function TransportInner() {
     setSpecialTreatment("NO");
     setDisabilitiesParticulars("");
     setFormOfPayment("NSFAS");
-    setIdFile(null);
-    setProofOfRegFile(null);
-    setBursaryProofFile(null);
-    setResidenceProofFile(null);
-    setNsfasProofFile(null);
-    if (idInputRef.current) idInputRef.current.value = "";
-    if (proofInputRef.current) proofInputRef.current.value = "";
-    if (bursaryInputRef.current) bursaryInputRef.current.value = "";
-    if (residenceInputRef.current) residenceInputRef.current.value = "";
-    if (nsfasInputRef.current) nsfasInputRef.current.value = "";
+    clearFile(setIdFile, idInputRef);
+    clearFile(setProofOfRegFile, proofInputRef);
+    clearFile(setBursaryProofFile, bursaryInputRef);
+    clearFile(setResidenceProofFile, residenceInputRef);
+    clearFile(setNsfasProofFile, nsfasInputRef);
     setDeclarationAccepted(false);
     setSignatureName("");
     setSignatureDate(todayISO);
@@ -346,6 +381,16 @@ function TransportInner() {
       return;
     }
 
+    if (isBursaryRequired && !bursaryProofFile) {
+      toast.error("Please upload proof of bursary acceptance.");
+      return;
+    }
+
+    if (isNsfasRequired && !nsfasProofFile) {
+      toast.error("Please upload proof of NSFAS funding.");
+      return;
+    }
+
     if (!declarationAccepted) {
       toast.error("Please accept the applicant declaration before submitting.");
       return;
@@ -357,6 +402,8 @@ function TransportInner() {
     }
 
     setSubmitting(true);
+    const uploadedPaths: string[] = [];
+
     try {
       validateDocumentFile(idFile, "Certified ID copy");
       validateDocumentFile(proofOfRegFile, "Proof of registration");
@@ -380,73 +427,98 @@ function TransportInner() {
       }
 
       const uploadedIdPath = await uploadTransportDocument(user.id, idFile, "id");
+      uploadedPaths.push(uploadedIdPath);
+
       const uploadedProofPath = await uploadTransportDocument(
         user.id,
         proofOfRegFile,
         "proof_of_registration"
       );
-      const uploadedBursaryPath = bursaryProofFile
-        ? await uploadTransportDocument(user.id, bursaryProofFile, "bursary_proof")
-        : null;
-      const uploadedResidencePath = residenceProofFile
-        ? await uploadTransportDocument(user.id, residenceProofFile, "residence_proof")
-        : null;
-      const uploadedNsfasPath = nsfasProofFile
-        ? await uploadTransportDocument(user.id, nsfasProofFile, "nsfas_proof")
-        : null;
+      uploadedPaths.push(uploadedProofPath);
+
+      let uploadedBursaryPath: string | null = null;
+      if (bursaryProofFile) {
+        uploadedBursaryPath = await uploadTransportDocument(
+          user.id,
+          bursaryProofFile,
+          "bursary_proof"
+        );
+        uploadedPaths.push(uploadedBursaryPath);
+      }
+
+      let uploadedResidencePath: string | null = null;
+      if (residenceProofFile) {
+        uploadedResidencePath = await uploadTransportDocument(
+          user.id,
+          residenceProofFile,
+          "residence_proof"
+        );
+        uploadedPaths.push(uploadedResidencePath);
+      }
+
+      let uploadedNsfasPath: string | null = null;
+      if (nsfasProofFile) {
+        uploadedNsfasPath = await uploadTransportDocument(
+          user.id,
+          nsfasProofFile,
+          "nsfas_proof"
+        );
+        uploadedPaths.push(uploadedNsfasPath);
+      }
 
       const payload = {
-  user_id: user.id,
-  transport_site: transportSite,
-  title: title.trim(),
-  surname: surname.trim(),
-  first_names: firstNames.trim(),
-  student_number: studentNumber.trim(),
-  date_of_application: dateOfApplication,
-  date_of_birth: dateOfBirth,
-  citizenship: citizenship.trim(),
-  cell_no: cellNo.trim(),
-  email_address: emailAddress.trim(),
-  postal_address: postalAddress.trim(),
-  residence_name: residenceName.trim(),
-  guardian_title: guardianTitle.trim(),
-  guardian_surname: guardianSurname.trim(),
-  guardian_first_names: guardianFirstNames.trim(),
-  guardian_tel_home: guardianTelHome.trim() || null,
-  guardian_tel_work: guardianTelWork.trim() || null,
-  guardian_tel_cell: guardianTelCell.trim(),
-  guardian_postal_address: guardianPostalAddress.trim(),
-  guardian_email_address: guardianEmailAddress.trim() || null,
-  proposed_course_of_study: proposedCourseOfStudy.trim(),
-  special_treatment: specialTreatment === "YES",
-  physical_disabilities_particulars: disabilitiesParticulars.trim() || null,
-  form_of_payment: formOfPayment,
-  id_document_url: uploadedIdPath,
-  proof_of_registration_url: uploadedProofPath,
-  bursary_proof_url: uploadedBursaryPath,
-  residence_proof_url: uploadedResidencePath,
-  nsfas_proof_url: uploadedNsfasPath,
-  declaration_accepted: declarationAccepted,
-  signature_name: signatureName.trim(),
-  signature_date: signatureDate,
-};
+        user_id: user.id,
+        transport_site: transportSite,
+        title: title.trim(),
+        surname: surname.trim(),
+        first_names: firstNames.trim(),
+        student_number: studentNumber.trim(),
+        date_of_application: dateOfApplication,
+        date_of_birth: dateOfBirth,
+        citizenship: citizenship.trim(),
+        cell_no: cellNo.trim(),
+        email_address: emailAddress.trim(),
+        residence_name: residenceName.trim(),
+        guardian_title: guardianTitle.trim(),
+        guardian_surname: guardianSurname.trim(),
+        guardian_first_names: guardianFirstNames.trim(),
+        guardian_tel_home: guardianTelHome.trim() || null,
+        guardian_tel_work: guardianTelWork.trim() || null,
+        guardian_tel_cell: guardianTelCell.trim(),
+        guardian_postal_address: guardianPostalAddress.trim(),
+        guardian_email_address: guardianEmailAddress.trim() || null,
+        proposed_course_of_study: proposedCourseOfStudy.trim(),
+        special_treatment: specialTreatment === "YES",
+        physical_disabilities_particulars: disabilitiesParticulars.trim() || null,
+        form_of_payment: formOfPayment,
+        id_document_url: uploadedIdPath,
+        proof_of_registration_url: uploadedProofPath,
+        bursary_proof_url: uploadedBursaryPath,
+        residence_proof_url: uploadedResidencePath,
+        nsfas_proof_url: uploadedNsfasPath,
+        declaration_accepted: declarationAccepted,
+        signature_name: signatureName.trim(),
+        signature_date: signatureDate,
+      };
 
-const { data: row, error } = await supabase
-  .from("transport_applications")
-  .insert(payload as never)
-  .select()
-  .single();
+      const { data: row, error } = await supabase
+        .from("transport_applications")
+        .insert(payload as never)
+        .select()
+        .single();
 
-if (error) {
-  throw new Error(error.message || "Could not submit your application.");
-}
+      if (error) {
+        throw new Error(error.message || "Could not submit your application.");
+      }
 
-setApplication(row as unknown as Application);
-
+      setApplication((row as unknown) as Application);
       setShowForm(false);
       resetForm();
       toast.success("Application submitted");
     } catch (err) {
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from("transport-documents").remove(uploadedPaths);
+      }
       toast.error(
         (err as Error).message || "Could not submit your application. Please try again."
       );
@@ -573,34 +645,34 @@ setApplication(row as unknown as Application);
                   </dd>
                 </div>
               )}
-              {application.status === "approved" && application.valid_until && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Valid until</dt>
-                  <dd className="text-right font-medium">
-                    {new Date(application.valid_until).toLocaleDateString()}
-                  </dd>
-                </div>
-              )}
-            </dl>
-
-            {application.status === "approved" &&
-              application.valid_until &&
-              !isExpired(application.valid_until) && (
-                <p className="rounded-xl bg-success/10 px-3 py-2 text-xs text-success">
-                  Your transport application is valid until{" "}
-                  {new Date(application.valid_until).toLocaleDateString()}.
-                </p>
-              )}
-            {application.status === "approved" && isExpired(application.valid_until) && (
-              <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
-                Your transport pass has expired. You may apply again.
-              </p>
-            )}
-            {application.status === "rejected" && (
-              <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
-                Your previous application was not approved. You may apply again.
-              </p>
-            )}
+              {application.status === "approved" &&
+  application.valid_until &&
+  !isExpired(application.valid_until) && (
+    <div className="rounded-xl bg-success/10 px-3 py-2.5 text-xs text-success space-y-0.5">
+      <p className="font-semibold">Pass Active</p>
+      <p>
+        Your transport application is valid until{" "}
+        {new Date(application.valid_until).toLocaleDateString()}.
+      </p>
+    </div>
+  )}
+{application.status === "approved" && isExpired(application.valid_until) && (
+  <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+    Your transport pass has expired. You may apply again.
+  </p>
+)}
+{application.status === "rejected" && (
+  <div className="rounded-xl bg-destructive/10 px-3 py-2.5 text-xs text-destructive space-y-1">
+    <p className="font-semibold">Your previous application was not approved.</p>
+    {application.rejection_reason ? (
+      <p className="text-foreground/90">
+        Reason: {application.rejection_reason}
+      </p>
+    ) : null}
+    <p className="text-muted-foreground">You may submit a new application.</p>
+  </div>
+)}
+</dl>
             {application.status !== "approved" && application.status !== "rejected" && (
               <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
                 Your application is awaiting review. You can apply again once it has been decided.
@@ -625,7 +697,7 @@ setApplication(row as unknown as Application);
             <div>
               <h2 className="font-semibold">Apply for transport</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                WSU Transport Application — student card details are pre-filled and editable.
+                EduCard Transport Application — student card details are pre-filled and editable.
               </p>
             </div>
 
@@ -746,16 +818,6 @@ setApplication(row as unknown as Application);
                   required
                   value={emailAddress}
                   onChange={(e) => setEmailAddress(e.target.value)}
-                  className="h-10"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs">Postal address *</Label>
-                <Input
-                  required
-                  value={postalAddress}
-                  onChange={(e) => setPostalAddress(e.target.value)}
                   className="h-10"
                 />
               </div>
@@ -943,6 +1005,10 @@ setApplication(row as unknown as Application);
                   onChange={(e) => setIdFile(e.target.files?.[0] ?? null)}
                   className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
                 />
+                <SelectedFileBadge
+                  file={idFile}
+                  onClear={() => clearFile(setIdFile, idInputRef)}
+                />
               </div>
 
               <div className="space-y-1">
@@ -955,16 +1021,28 @@ setApplication(row as unknown as Application);
                   onChange={(e) => setProofOfRegFile(e.target.files?.[0] ?? null)}
                   className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
                 />
+                <SelectedFileBadge
+                  file={proofOfRegFile}
+                  onClear={() => clearFile(setProofOfRegFile, proofInputRef)}
+                />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs">Proof of bursary acceptance (PDF, JPG, PNG, WEBP, max 5 MB)</Label>
+                <Label className="text-xs">
+                  Proof of bursary acceptance (PDF, JPG, PNG, WEBP, max 5 MB)
+                  {isBursaryRequired ? " *" : ""}
+                </Label>
                 <Input
                   ref={bursaryInputRef}
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  required={isBursaryRequired}
                   onChange={(e) => setBursaryProofFile(e.target.files?.[0] ?? null)}
                   className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
+                />
+                <SelectedFileBadge
+                  file={bursaryProofFile}
+                  onClear={() => clearFile(setBursaryProofFile, bursaryInputRef)}
                 />
               </div>
 
@@ -977,16 +1055,28 @@ setApplication(row as unknown as Application);
                   onChange={(e) => setResidenceProofFile(e.target.files?.[0] ?? null)}
                   className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
                 />
+                <SelectedFileBadge
+                  file={residenceProofFile}
+                  onClear={() => clearFile(setResidenceProofFile, residenceInputRef)}
+                />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs">Proof of NSFAS funding (PDF, JPG, PNG, WEBP, max 5 MB)</Label>
+                <Label className="text-xs">
+                  Proof of NSFAS funding (PDF, JPG, PNG, WEBP, max 5 MB)
+                  {isNsfasRequired ? " *" : ""}
+                </Label>
                 <Input
                   ref={nsfasInputRef}
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  required={isNsfasRequired}
                   onChange={(e) => setNsfasProofFile(e.target.files?.[0] ?? null)}
                   className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
+                />
+                <SelectedFileBadge
+                  file={nsfasProofFile}
+                  onClear={() => clearFile(setNsfasProofFile, nsfasInputRef)}
                 />
               </div>
 

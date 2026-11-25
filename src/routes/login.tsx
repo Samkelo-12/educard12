@@ -20,29 +20,42 @@ function Login() {
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+
   // State handling for biometric authentication
   const [hasBiometric, setHasBiometric] = useState(false);
   const [isBiometricSupported, setIsBiometricSupported] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  // Check stored biometric credentials and hardware capabilities on load
+  // Clean up legacy cached password keys and check biometric support on load
   useEffect(() => {
+    try {
+      localStorage.removeItem("saved_password");
+      localStorage.removeItem("educard_saved_password");
+      sessionStorage.removeItem("saved_password");
+      sessionStorage.removeItem("educard_saved_password");
+    } catch {
+      // Ignore storage access errors in restricted contexts
+    }
+
     void getStoredCredential().then((cred) => setHasBiometric(Boolean(cred)));
-    checkBiometricSupport().then((supported) => {
+    void checkBiometricSupport().then((supported) => {
       setIsBiometricSupported(supported);
     });
   }, []);
 
- // Standard Email/Password Login
-const handle = async (e: React.FormEvent) => {
+  // Standard Email/Password Login
+  const handle = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsAuthenticating(true);
     try {
       await signIn(email, password);
-      
-      localStorage.setItem("saved_email", email);
-      localStorage.setItem("saved_password", password);
+      setPassword("");
+
+      try {
+        localStorage.setItem("saved_email", email);
+      } catch {
+        // Ignore storage access errors
+      }
 
       toast.success("Welcome back!");
       navigate({ to: "/dashboard" });
@@ -73,7 +86,9 @@ const handle = async (e: React.FormEvent) => {
     // 2. Ensure user has enabled native biometrics in settings
     const isEnabled = localStorage.getItem("biometric_enabled") === "true";
     if (!isEnabled) {
-      toast.error("Biometric unlock is disabled. Please sign in with your password once and enable it in Privacy & Security.");
+      toast.error(
+        "Biometric unlock is disabled. Please sign in with your password once and enable it in Privacy & Security.",
+      );
       return;
     }
 
@@ -85,32 +100,20 @@ const handle = async (e: React.FormEvent) => {
 
       if (!verified) {
         toast.error("Biometric authentication failed or was cancelled.");
-        setIsAuthenticating(false);
         return;
       }
 
-      // 4. Verify active Supabase session state
-      const { data: { session } } = await supabase.auth.getSession();
+      // 4. Verify active Supabase session state (never cache or replay passwords)
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         toast.success("Biometric verification successful!");
         navigate({ to: "/dashboard" });
         return;
       }
 
-      // 5. If session expired, re-authenticate silently using cached credentials
-      const savedEmail = localStorage.getItem("saved_email");
-      const savedPassword = localStorage.getItem("saved_password");
-
-      if (!savedEmail || !savedPassword) {
-        toast.error("Session expired. Please sign in with your password once to renew security credentials.");
-        setIsAuthenticating(false);
-        return;
-      }
-
-      await signIn(savedEmail, savedPassword);
-      toast.success("Welcome back!");
-      navigate({ to: "/dashboard" });
-
+      toast.error("Session expired. Please sign in with your password to continue.");
     } catch (err) {
       console.error("Biometric login error:", err);
       toast.error("Failed to authenticate with biometrics. Please use your password.");
@@ -126,7 +129,9 @@ const handle = async (e: React.FormEvent) => {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
             <GraduationCap className="h-7 w-7" />
           </div>
-          <p className="mt-6 text-xs uppercase tracking-[0.25em] text-primary-foreground/70 font-semibold">EduCard</p>
+          <p className="mt-6 text-xs uppercase tracking-[0.25em] text-primary-foreground/70 font-semibold">
+            EduCard · Smarter campus in your pocket
+          </p>
           <h1 className="mt-1 text-3xl font-bold">Welcome back</h1>
           <p className="mt-1 text-primary-foreground/80 text-sm">Sign in to access your WSU student card</p>
         </div>
@@ -174,8 +179,8 @@ const handle = async (e: React.FormEvent) => {
           </div>
 
           <Button type="submit" className="w-full h-11 bg-gradient-primary shadow-soft" disabled={isAuthenticating}>
-  {isAuthenticating ? "Signing in..." : "Sign in"}
-</Button>
+            {isAuthenticating ? "Signing in..." : "Sign in"}
+          </Button>
 
           {/* Divider & Biometric Login Button */}
           {(hasBiometric || isBiometricSupported) && (
