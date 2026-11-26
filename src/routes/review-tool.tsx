@@ -242,17 +242,18 @@ function ReviewToolPage() {
           });
         }
 
-        const valid = data.application?.valid_until;
-        const actionLabel = existingHistory
-          ? status === 'rejected'
-            ? 'rebuked'
-            : 'approved'
-          : status;
-        setNotice(
-          `Application ${actionLabel}${valid ? ` — valid until ${valid}` : ''}${
-            status === 'rejected' && reason ? ` (${reason})` : ''
-          }.`,
-        );
+        const valid = status === 'approved' ? data.application?.valid_until : null;
+const actionLabel = existingHistory
+  ? status === 'rejected'
+    ? 'rebuked'
+    : 'approved'
+  : status;
+
+setNotice(
+  `Application ${actionLabel}${valid ? ` — valid until ${valid}` : ''}${
+    status === 'rejected' && reason ? ` (${reason})` : ''
+  }.`,
+);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Review failed');
       } finally {
