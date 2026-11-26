@@ -89,6 +89,7 @@ export const Route = createFileRoute('/api/public/pending-applications')({
             id: string;
             user_id: string;
             created_at: string;
+            valid_until: string | null;
           }
         >;
 

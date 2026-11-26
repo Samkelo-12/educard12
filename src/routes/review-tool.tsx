@@ -61,6 +61,7 @@ type PendingApplication = {
   student_name: string;
   student_number: string;
   documents?: ApplicationDocument[];
+  valid_until?: string | null;
 };
 
 type HistoryApplication = PendingApplication & {
@@ -98,6 +99,7 @@ function ReviewToolPage() {
   const [applications, setApplications] = useState<PendingApplication[]>([]);
   const [history, setHistory] = useState<HistoryApplication[]>([]);
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
+  const [rebukeOpenIds, setRebukeOpenIds] = useState<Record<string, boolean>>({});
   const [previewKeys, setPreviewKeys] = useState<Record<string, boolean>>({});
   const [brokenPreviewKeys, setBrokenPreviewKeys] = useState<Record<string, boolean>>({});
   const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({});
@@ -113,6 +115,19 @@ function ReviewToolPage() {
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleRebukePanel = (app: HistoryApplication) => {
+    setRebukeOpenIds((prev) => {
+      const nextOpen = !prev[app.id];
+      if (nextOpen && app.rejection_reason && rejectionReasons[app.id] === undefined) {
+        setRejectionReasons((reasons) => ({
+          ...reasons,
+          [app.id]: app.rejection_reason ?? '',
+        }));
+      }
+      return { ...prev, [app.id]: nextOpen };
+    });
   };
 
   const togglePreview = (key: string) => {
@@ -184,23 +199,41 @@ function ReviewToolPage() {
         if (!res.ok || !data.success) {
           throw new Error(data.error || 'Review failed');
         }
-        const reviewed = applications.find((a) => a.id === applicationId);
+
+        const reviewedPending = applications.find((a) => a.id === applicationId);
+        const existingHistory = history.find((a) => a.id === applicationId);
+        const sourceApp = reviewedPending ?? existingHistory;
+
         setApplications((prev) => prev.filter((a) => a.id !== applicationId));
-        if (reviewed) {
-          setHistory((prev) => [
-            {
-              ...reviewed,
-              status,
-              reviewed_at: new Date().toISOString(),
-              valid_until: data.application?.valid_until ?? null,
-              rejection_reason:
-                status === 'rejected'
-                  ? (data.application?.rejection_reason ?? reason)
-                  : null,
-            },
-            ...prev,
-          ]);
+
+        if (sourceApp) {
+          const updatedRecord: HistoryApplication = {
+            ...sourceApp,
+            status,
+            reviewed_at: new Date().toISOString(),
+            valid_until:
+              status === 'approved'
+                ? (data.application?.valid_until ?? sourceApp.valid_until ?? null)
+                : null,
+            rejection_reason:
+              status === 'rejected'
+                ? (data.application?.rejection_reason ?? reason)
+                : null,
+          };
+
+          setHistory((prev) =>
+            existingHistory
+              ? prev.map((item) => (item.id === applicationId ? updatedRecord : item))
+              : [updatedRecord, ...prev],
+          );
         }
+
+        setRebukeOpenIds((prev) => {
+          const next = { ...prev };
+          delete next[applicationId];
+          return next;
+        });
+
         if (status === 'rejected') {
           setRejectionReasons((prev) => {
             const next = { ...prev };
@@ -208,9 +241,15 @@ function ReviewToolPage() {
             return next;
           });
         }
+
         const valid = data.application?.valid_until;
+        const actionLabel = existingHistory
+          ? status === 'rejected'
+            ? 'rebuked'
+            : 'approved'
+          : status;
         setNotice(
-          `Application ${status}${valid ? ` — valid until ${valid}` : ''}${
+          `Application ${actionLabel}${valid ? ` — valid until ${valid}` : ''}${
             status === 'rejected' && reason ? ` (${reason})` : ''
           }.`,
         );
@@ -220,7 +259,7 @@ function ReviewToolPage() {
         setBusyId(null);
       }
     },
-    [secret, applications, rejectionReasons],
+    [secret, applications, history, rejectionReasons],
   );
 
   const unlock = (e: React.FormEvent) => {
@@ -698,6 +737,9 @@ function ReviewToolPage() {
                   {filteredHistory.map((app) => {
                     const active = isActive(app);
                     const isExpanded = Boolean(expandedIds[app.id]);
+                    const isRebukeOpen = Boolean(rebukeOpenIds[app.id]);
+                    const canReviewOrRebuke = active || app.status === 'rejected';
+
                     return (
                       <li key={app.id} className="space-y-2 rounded-2xl border border-border bg-card p-4">
                         <div className="flex items-start justify-between gap-2">
@@ -759,6 +801,73 @@ function ReviewToolPage() {
                         </Button>
 
                         {isExpanded ? renderDetailsAndDocuments(app) : null}
+
+                        {canReviewOrRebuke ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-between border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => toggleRebukePanel(app)}
+                          >
+                            <span>
+                              {isRebukeOpen
+                                ? 'Close Review / Rebuke'
+                                : active
+                                  ? 'Review / Rebuke Pass'
+                                  : 'Re-review / Rebuke'}
+                            </span>
+                            {isRebukeOpen ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        ) : null}
+
+                        {isRebukeOpen ? (
+                          <div className="space-y-2.5 rounded-xl border border-destructive/30 bg-background/70 p-3">
+                            <div className="space-y-1">
+                              <Label
+                                htmlFor={`history-rebuke-reason-${app.id}`}
+                                className="text-[11px] text-muted-foreground"
+                              >
+                                Rebuke / rejection reason
+                              </Label>
+                              <Input
+                                id={`history-rebuke-reason-${app.id}`}
+                                value={rejectionReasons[app.id] ?? ''}
+                                onChange={(e) => setRejectionReason(app.id, e.target.value)}
+                                placeholder="Enter reason for rebuking this application..."
+                                className="h-9 text-xs"
+                              />
+                            </div>
+
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="flex-1"
+                                disabled={busyId === app.id}
+                                onClick={() => void review(app.id, 'rejected')}
+                              >
+                                <X className="h-4 w-4" />
+                                Rebuke
+                              </Button>
+                              {app.status === 'rejected' ? (
+                                <Button
+                                  size="sm"
+                                  className="flex-1"
+                                  disabled={busyId === app.id}
+                                  onClick={() => void review(app.id, 'approved')}
+                                >
+                                  <Check className="h-4 w-4" />
+                                  Approve
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
                       </li>
                     );
                   })}

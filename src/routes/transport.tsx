@@ -985,12 +985,12 @@ function TransportInner() {
             {/* Special Treatment, Disability Details & Payment */}
             <div className="space-y-3 border-t pt-4">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Special Treatment, Disability &amp; Payment
+                Disability &amp; Payment
               </h3>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-xs">Special treatment *</Label>
+                  <Label className="text-xs">Disability *</Label>
                   <Select
                     value={specialTreatment}
                     onValueChange={(val) => setSpecialTreatment(val as "NO" | "YES")}
