@@ -33,7 +33,8 @@ type DocType =
   | "proof_of_registration"
   | "bursary_proof"
   | "residence_proof"
-  | "nsfas_proof";
+  | "nsfas_proof"
+  | "payment_proof";
 
 type ProfileData = {
   full_name: string;
@@ -73,6 +74,7 @@ type Application = {
   bursary_proof_url: string | null;
   residence_proof_url: string | null;
   nsfas_proof_url: string | null;
+  payment_proof_url: string | null;
   declaration_accepted: boolean;
   signature_name: string;
   signature_date: string;
@@ -241,12 +243,14 @@ function TransportInner() {
   const [bursaryProofFile, setBursaryProofFile] = useState<File | null>(null);
   const [residenceProofFile, setResidenceProofFile] = useState<File | null>(null);
   const [nsfasProofFile, setNsfasProofFile] = useState<File | null>(null);
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
 
   const idInputRef = useRef<HTMLInputElement | null>(null);
   const proofInputRef = useRef<HTMLInputElement | null>(null);
   const bursaryInputRef = useRef<HTMLInputElement | null>(null);
   const residenceInputRef = useRef<HTMLInputElement | null>(null);
   const nsfasInputRef = useRef<HTMLInputElement | null>(null);
+  const paymentInputRef = useRef<HTMLInputElement | null>(null);
 
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [signatureName, setSignatureName] = useState("");
@@ -254,6 +258,7 @@ function TransportInner() {
 
   const isNsfasRequired = formOfPayment === "NSFAS";
   const isBursaryRequired = formOfPayment === "Bursary";
+  const isPaymentProofRequired = formOfPayment === "Upfront Payment";
 
   const clearFile = (
     setter: React.Dispatch<React.SetStateAction<File | null>>,
@@ -261,6 +266,19 @@ function TransportInner() {
   ) => {
     setter(null);
     if (ref.current) ref.current.value = "";
+  };
+
+  const handlePaymentMethodChange = (val: PaymentForm) => {
+    setFormOfPayment(val);
+    if (val !== "NSFAS") {
+      clearFile(setNsfasProofFile, nsfasInputRef);
+    }
+    if (val !== "Bursary") {
+      clearFile(setBursaryProofFile, bursaryInputRef);
+    }
+    if (val !== "Upfront Payment") {
+      clearFile(setPaymentProofFile, paymentInputRef);
+    }
   };
 
   const applyProfileDefaults = useCallback(
@@ -362,6 +380,7 @@ function TransportInner() {
     clearFile(setBursaryProofFile, bursaryInputRef);
     clearFile(setResidenceProofFile, residenceInputRef);
     clearFile(setNsfasProofFile, nsfasInputRef);
+    clearFile(setPaymentProofFile, paymentInputRef);
     setDeclarationAccepted(false);
     setSignatureName("");
     setSignatureDate(todayISO);
@@ -391,6 +410,11 @@ function TransportInner() {
       return;
     }
 
+    if (isPaymentProofRequired && !paymentProofFile) {
+      toast.error("Please upload proof of payment.");
+      return;
+    }
+
     if (!declarationAccepted) {
       toast.error("Please accept the applicant declaration before submitting.");
       return;
@@ -407,14 +431,17 @@ function TransportInner() {
     try {
       validateDocumentFile(idFile, "Certified ID copy");
       validateDocumentFile(proofOfRegFile, "Proof of registration");
-      if (bursaryProofFile) {
+      if (isBursaryRequired && bursaryProofFile) {
         validateDocumentFile(bursaryProofFile, "Proof of bursary acceptance");
       }
       if (residenceProofFile) {
         validateDocumentFile(residenceProofFile, "Proof of residence acceptance");
       }
-      if (nsfasProofFile) {
+      if (isNsfasRequired && nsfasProofFile) {
         validateDocumentFile(nsfasProofFile, "Proof of NSFAS funding");
+      }
+      if (isPaymentProofRequired && paymentProofFile) {
+        validateDocumentFile(paymentProofFile, "Proof of payment");
       }
 
       const {
@@ -437,7 +464,7 @@ function TransportInner() {
       uploadedPaths.push(uploadedProofPath);
 
       let uploadedBursaryPath: string | null = null;
-      if (bursaryProofFile) {
+      if (isBursaryRequired && bursaryProofFile) {
         uploadedBursaryPath = await uploadTransportDocument(
           user.id,
           bursaryProofFile,
@@ -457,13 +484,23 @@ function TransportInner() {
       }
 
       let uploadedNsfasPath: string | null = null;
-      if (nsfasProofFile) {
+      if (isNsfasRequired && nsfasProofFile) {
         uploadedNsfasPath = await uploadTransportDocument(
           user.id,
           nsfasProofFile,
           "nsfas_proof"
         );
         uploadedPaths.push(uploadedNsfasPath);
+      }
+
+      let uploadedPaymentPath: string | null = null;
+      if (isPaymentProofRequired && paymentProofFile) {
+        uploadedPaymentPath = await uploadTransportDocument(
+          user.id,
+          paymentProofFile,
+          "payment_proof"
+        );
+        uploadedPaths.push(uploadedPaymentPath);
       }
 
       const payload = {
@@ -496,6 +533,7 @@ function TransportInner() {
         bursary_proof_url: uploadedBursaryPath,
         residence_proof_url: uploadedResidencePath,
         nsfas_proof_url: uploadedNsfasPath,
+        payment_proof_url: uploadedPaymentPath,
         declaration_accepted: declarationAccepted,
         signature_name: signatureName.trim(),
         signature_date: signatureDate,
@@ -637,6 +675,12 @@ function TransportInner() {
                   <dd className="text-right font-medium">Uploaded</dd>
                 </div>
               )}
+              {application.payment_proof_url && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Proof of payment</dt>
+                  <dd className="text-right font-medium">Uploaded</dd>
+                </div>
+              )}
               {application.reviewed_at && (
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">Reviewed</dt>
@@ -646,33 +690,33 @@ function TransportInner() {
                 </div>
               )}
               {application.status === "approved" &&
-  application.valid_until &&
-  !isExpired(application.valid_until) && (
-    <div className="rounded-xl bg-success/10 px-3 py-2.5 text-xs text-success space-y-0.5">
-      <p className="font-semibold">Pass Active</p>
-      <p>
-        Your transport application is valid until{" "}
-        {new Date(application.valid_until).toLocaleDateString()}.
-      </p>
-    </div>
-  )}
-{application.status === "approved" && isExpired(application.valid_until) && (
-  <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
-    Your transport pass has expired. You may apply again.
-  </p>
-)}
-{application.status === "rejected" && (
-  <div className="rounded-xl bg-destructive/10 px-3 py-2.5 text-xs text-destructive space-y-1">
-    <p className="font-semibold">Your previous application was not approved.</p>
-    {application.rejection_reason ? (
-      <p className="text-foreground/90">
-        Reason: {application.rejection_reason}
-      </p>
-    ) : null}
-    <p className="text-muted-foreground">You may submit a new application.</p>
-  </div>
-)}
-</dl>
+                application.valid_until &&
+                !isExpired(application.valid_until) && (
+                  <div className="rounded-xl bg-success/10 px-3 py-2.5 text-xs text-success space-y-0.5">
+                    <p className="font-semibold">Pass Active</p>
+                    <p>
+                      Your transport application is valid until{" "}
+                      {new Date(application.valid_until).toLocaleDateString()}.
+                    </p>
+                  </div>
+                )}
+              {application.status === "approved" && isExpired(application.valid_until) && (
+                <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                  Your transport pass has expired. You may apply again.
+                </p>
+              )}
+              {application.status === "rejected" && (
+                <div className="rounded-xl bg-destructive/10 px-3 py-2.5 text-xs text-destructive space-y-1">
+                  <p className="font-semibold">Your previous application was not approved.</p>
+                  {application.rejection_reason ? (
+                    <p className="text-foreground/90">
+                      Reason: {application.rejection_reason}
+                    </p>
+                  ) : null}
+                  <p className="text-muted-foreground">You may submit a new application.</p>
+                </div>
+              )}
+            </dl>
             {application.status !== "approved" && application.status !== "rejected" && (
               <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
                 Your application is awaiting review. You can apply again once it has been decided.
@@ -965,7 +1009,7 @@ function TransportInner() {
                   <Label className="text-xs">Form of payment *</Label>
                   <Select
                     value={formOfPayment}
-                    onValueChange={(val) => setFormOfPayment(val as PaymentForm)}
+                    onValueChange={(val) => handlePaymentMethodChange(val as PaymentForm)}
                   >
                     <SelectTrigger className="h-10">
                       <SelectValue />
@@ -1028,30 +1072,12 @@ function TransportInner() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs">
-                  Proof of bursary acceptance (PDF, JPG, PNG, WEBP, max 5 MB)
-                  {isBursaryRequired ? " *" : ""}
-                </Label>
-                <Input
-                  ref={bursaryInputRef}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.webp"
-                  required={isBursaryRequired}
-                  onChange={(e) => setBursaryProofFile(e.target.files?.[0] ?? null)}
-                  className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
-                />
-                <SelectedFileBadge
-                  file={bursaryProofFile}
-                  onClear={() => clearFile(setBursaryProofFile, bursaryInputRef)}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs">Proof of residence acceptance (PDF, JPG, PNG, WEBP, max 5 MB)</Label>
+                <Label className="text-xs">Proof of residence acceptance (PDF, JPG, PNG, WEBP, max 5 MB)*</Label>
                 <Input
                   ref={residenceInputRef}
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  required
                   onChange={(e) => setResidenceProofFile(e.target.files?.[0] ?? null)}
                   className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
                 />
@@ -1061,24 +1087,65 @@ function TransportInner() {
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs">
-                  Proof of NSFAS funding (PDF, JPG, PNG, WEBP, max 5 MB)
-                  {isNsfasRequired ? " *" : ""}
-                </Label>
-                <Input
-                  ref={nsfasInputRef}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.webp"
-                  required={isNsfasRequired}
-                  onChange={(e) => setNsfasProofFile(e.target.files?.[0] ?? null)}
-                  className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
-                />
-                <SelectedFileBadge
-                  file={nsfasProofFile}
-                  onClear={() => clearFile(setNsfasProofFile, nsfasInputRef)}
-                />
-              </div>
+              {isNsfasRequired && (
+                <div className="space-y-1">
+                  <Label className="text-xs">
+                    Proof of NSFAS funding (PDF, JPG, PNG, WEBP, max 5 MB) *
+                  </Label>
+                  <Input
+                    ref={nsfasInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    required
+                    onChange={(e) => setNsfasProofFile(e.target.files?.[0] ?? null)}
+                    className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
+                  />
+                  <SelectedFileBadge
+                    file={nsfasProofFile}
+                    onClear={() => clearFile(setNsfasProofFile, nsfasInputRef)}
+                  />
+                </div>
+              )}
+
+              {isBursaryRequired && (
+                <div className="space-y-1">
+                  <Label className="text-xs">
+                    Proof of bursary acceptance (PDF, JPG, PNG, WEBP, max 5 MB) *
+                  </Label>
+                  <Input
+                    ref={bursaryInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    required
+                    onChange={(e) => setBursaryProofFile(e.target.files?.[0] ?? null)}
+                    className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
+                  />
+                  <SelectedFileBadge
+                    file={bursaryProofFile}
+                    onClear={() => clearFile(setBursaryProofFile, bursaryInputRef)}
+                  />
+                </div>
+              )}
+
+              {isPaymentProofRequired && (
+                <div className="space-y-1">
+                  <Label className="text-xs">
+                    Proof of payment (PDF, JPG, PNG, WEBP, max 5 MB) *
+                  </Label>
+                  <Input
+                    ref={paymentInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    required
+                    onChange={(e) => setPaymentProofFile(e.target.files?.[0] ?? null)}
+                    className="h-10 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-primary"
+                  />
+                  <SelectedFileBadge
+                    file={paymentProofFile}
+                    onClear={() => clearFile(setPaymentProofFile, paymentInputRef)}
+                  />
+                </div>
+              )}
 
               <label className="flex items-start gap-2 pt-1 text-xs leading-relaxed">
                 <input

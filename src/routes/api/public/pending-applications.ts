@@ -39,6 +39,7 @@ async function resolveDocuments(supabaseAdmin: any, row: Record<string, unknown>
     [row.bursary_proof_url, 'Proof of Bursary Acceptance'],
     [row.residence_proof_url, 'Proof of Residence Acceptance'],
     [row.nsfas_proof_url, 'Proof of NSFAS Funding'],
+    [row.payment_proof_url, 'Proof of Payment'],
   ];
 
   for (const [rawVal, label] of entries) {
